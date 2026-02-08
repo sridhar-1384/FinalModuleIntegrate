@@ -40,6 +40,7 @@ public class StudentServiceImpl implements StudentService {
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .dept(dto.getDept())
                 .cgpa(dto.getCgpa())
+                .phone(dto.getPhone())
                 .build();
 
         return mapToResponse(studentRepository.save(student));
@@ -179,6 +180,7 @@ public class StudentServiceImpl implements StudentService {
                 .email(student.getEmail())
                 .dept(student.getDept())
                 .cgpa(student.getCgpa())
+                .phone(student.getPhone())
                 .resumePath(student.getResumePath())
                 .skills(skills)
                 .build();
