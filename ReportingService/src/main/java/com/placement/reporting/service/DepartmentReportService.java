@@ -1,37 +1,62 @@
 package com.placement.reporting.service;
 
+import com.placement.reporting.client.ApplicationClient;
+import com.placement.reporting.client.StudentClient;
 import com.placement.reporting.dto.DepartmentReportDto;
-import com.placement.reporting.repository.DepartmentReportRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class DepartmentReportService {
 
-    private final DepartmentReportRepository repository;
+    private final StudentClient studentClient;
+    private final ApplicationClient applicationClient;
 
-    public DepartmentReportService(DepartmentReportRepository repository) {
-        this.repository = repository;
+    public DepartmentReportService(StudentClient studentClient,
+                                   ApplicationClient applicationClient) {
+        this.studentClient = studentClient;
+        this.applicationClient = applicationClient;
     }
 
     public List<DepartmentReportDto> getDepartmentReport() {
 
-        List<Object[]> rows = repository.fetchDepartmentReport();
+        var students = studentClient.getAllStudents();
+
+        Map<String, Long> totalByDept = new HashMap<>();
+        Map<String, Long> placedByDept = new HashMap<>();
+
+        for (var student : students) {
+
+            String department = String.valueOf(student.get("department"));
+            Long studentId = Long.valueOf(student.get("id").toString());
+
+            totalByDept.put(
+                    department,
+                    totalByDept.getOrDefault(department, 0L) + 1
+            );
+
+            var applications = applicationClient.getApplicationsByStudent(studentId);
+
+            boolean isPlaced = applications.stream()
+                    .anyMatch(app -> "SELECTED".equalsIgnoreCase(app.getStatus()));
+
+            if (isPlaced) {
+                placedByDept.put(
+                        department,
+                        placedByDept.getOrDefault(department, 0L) + 1
+                );
+            }
+        }
+
         List<DepartmentReportDto> result = new ArrayList<>();
 
-        for (Object[] row : rows) {
-            String department = (String) row[0];
-            Long totalStudents = row[1] != null ? ((Number) row[1]).longValue() : 0L;
-            Long placedStudents = row[2] != null ? ((Number) row[2]).longValue() : 0L;
-            Double averagePackage = row[3] != null ? ((Number) row[3]).doubleValue() : null;
-
+        for (String dept : totalByDept.keySet()) {
             result.add(new DepartmentReportDto(
-                    department,
-                    totalStudents,
-                    placedStudents,
-                    averagePackage
+                    dept,
+                    totalByDept.get(dept),
+                    placedByDept.getOrDefault(dept, 0L),
+                    null
             ));
         }
 
