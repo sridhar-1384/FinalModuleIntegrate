@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Applications</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
+    <style>
+        body {
+            background: linear-gradient(135deg, #eef2f7, #f8f9fb);
+        }
+        .sidebar {
+            background: #0f172a;
+            min-height: 100vh;
+        }
+        .sidebar a {
+            color: #cbd5e1;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            display: block;
+            text-decoration: none;
+        }
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: #1e293b;
+            color: #fff;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 14px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s;
+        }
+        .glass-card:hover {
+            transform: translateY(-3px);
+        }
+        .badge-status {
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-dark bg-dark px-4 d-flex justify-content-between">
+    <span class="navbar-brand fw-semibold">Placement Management System</span>
+    <div class="d-flex align-items-center gap-3">
+                <span class="text-white small opacity-75">
+                    <i class="bi bi-person-circle me-1"></i>
+                    <span id="display-student-name">Student</span>
+                    <span class="opacity-75 ms-1">(ID: <span id="display-student-id">...</span>)</span>
+                </span>
+        <button class="btn btn-outline-light btn-sm" id="login">
+            Login
+        </button>
+    </div>
+</nav>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-2 sidebar p-3 d-none d-md-block">
+            <h6 class="text-uppercase text-secondary mb-3 small fw-bold">Student Menu</h6>
+            <a href="#"><i class="bi bi-grid me-2"></i>Dashboard</a>
+            <a href="#"><i class="bi bi-person me-2"></i>Profile</a>
+            <a href="#"><i class="bi bi-briefcase me-2"></i>Jobs</a>
+            <a href="#" class="active"><i class="bi bi-file-earmark-text me-2"></i>My Applications</a>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-10 p-4">
+            <h4 class="fw-semibold mb-4">My Applications</h4>
+            <div id="alert-area"></div>
+            <div id="applications-container">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="text-muted mt-2">Loading your applications...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const sec = document.getElementById('login');
+    let token = sessionStorage.getItem('sessionToken');
+    token ? (sec.innerHTML = 'Logout') : (sec.innerHTML = 'Login');
+    sec.addEventListener("click",()=>{
+        console.log("clicked")
+        if(token) sessionStorage.clear()
+        window.location.href="/login.html"
+    })
+
+    const API_BASE = "http://localhost:8084/api/applications";
+    const login_page = "login.html";
+
+    const curr_stu_id =
+        new URLSearchParams(window.location.search).get("studentId") || sessionStorage.getItem("userId") || 1;
+
+    // Display ID immediately
+    document.getElementById("display-student-id").innerText = curr_stu_id;
+
+    document.addEventListener("DOMContentLoaded", fetchApplications);
+
+    async function fetchApplications() {
+        const container = document.getElementById("applications-container");
+        const alertArea = document.getElementById("alert-area");
+
+        if (!token) {
+            alert("You are not logged in.");
+            window.location.href = login_page;
+            return;
+        }
+
+        try {
+            const headers = { "Content-Type": "application/json" };
+            if (token)
+                headers["SESSION-TOKEN"] = token;
+
+            const response = await fetch(`${API_BASE}/student/${curr_stu_id}`, {
+                method: "GET",
+                headers: headers,
+            });
+
+            // Handle Backend Auth Errors
+            if (response.status === 401) {
+                alert("Session Expired. Please login again.");
+                window.location.href = login_page;
+                return;
+            }
+            if (response.status === 403) {
+                alert("Access Denied: You do not have permission to view this page.");
+                return;
+            }
+            if (!response.ok){
+                const e = await response.json();
+                alert(e.message || "Server Error: ${response.status}");
+                return;
+            }
+
+            const applications = await response.json();
+
+            if (
+                applications.length > 0 &&
+                applications[0].studentName &&
+                applications[0].studentName !== "N/A"
+            ) {
+                document.getElementById("display-student-name").innerText = applications[0].studentName;
+            }
+
+            container.innerHTML = "";
+
+            if (applications.length === 0) {
+                alertArea.innerHTML = `
+                    <div class="glass-card p-5 text-center">
+                        <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
+                        <h5>No Applications Found</h5>
+                        <p class="text-muted">You haven't applied to any jobs yet.</p>
+                        <a href="#" class="btn btn-primary mt-2">Browse Jobs</a>
+                    </div>`;
+                return;
+            }
+
+            // Render Application Cards
+            applications.forEach((app) => {
+                const badgeColor = getStatusColor(app.status);
+                const card = `
+                    <div class="glass-card p-4 mb-3">
+                        <div class="row align-items-center">
+                            <div class="col-md-1 col-2"><div class="bg-white p-2 rounded border text-center shadow-sm"><i class="bi bi-building fs-4 text-primary"></i></div></div>
+                            <div class="col-md-4 col-10"><h5 class="mb-1 fw-bold text-dark">${app.jobTitle || "Job Role"}</h5><div class="text-muted small"><i class="bi bi-buildings me-1"></i> ${app.companyName || "Company Name"}</div></div>
+                            <div class="col-md-3 col-6 mt-3 mt-md-0"><div class="text-muted small text-uppercase fw-bold" style="font-size: 0.75rem;">Applied On</div><div class="fw-medium">${app.appliedDate}</div></div>
+                            <div class="col-md-2 col-6 mt-3 mt-md-0"><span class="badge-status" style="background:${badgeColor.bg}; color:${badgeColor.text}; border:1px solid ${badgeColor.border}">${app.status}</span></div>
+                            <div class="col-md-2 col-12 mt-3 mt-md-0 text-end"><a href="application-details.html?id=${app.id}" class="btn btn-primary btn-sm w-100">View Details</a></div>
+                        </div>
+                    </div>`;
+                container.innerHTML += card;
+            });
+        } catch (error) {
+            console.error(error);
+            container.innerHTML = "";
+            alertArea.innerHTML = `<div class="alert alert-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> Connection Failed. Ensure Backend is running.</div>`;
+        }
+    }
+
+    function getStatusColor(status) {
+        switch (status) {
+            case "SHORTLISTED":
+                return {
+                    bg: "#dcfce7",
+                    text: "#166534",
+                    border: "#bbf7d0" };
+            case "SELECTED":
+                return {
+                    bg: "#dcfce7",
+                    text: "#15803d",
+                    border: "#bbf7d0" };
+            case "REJECTED":
+                return {
+                    bg: "#fee2e2",
+                    text: "#991b1b",
+                    border: "#fecaca" };
+            case "APPLIED":
+                return {
+                    bg: "#eff6ff",
+                    text: "#1e40af",
+                    border: "#bfdbfe" };
+            default:
+                return {
+                    bg: "#f1f5f9",
+                    text: "#475569",
+                    border: "#e2e8f0" };
+        }
+    }
+</script>
+</body>
+</html>

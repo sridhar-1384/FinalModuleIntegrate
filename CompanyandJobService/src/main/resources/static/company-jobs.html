@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Jobs | Mthree Placement</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #eef2f7, #f8f9fb);
+        }
+        .sidebar {
+            background: #0f172a;
+            min-height: 100vh;
+        }
+        .sidebar a {
+            color: #cbd5e1;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            display: block;
+            text-decoration: none;
+        }
+        .sidebar a.active,
+        .sidebar a:hover {
+            background: #1e293b;
+            color: #fff;
+        }
+        .job-card {
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-dark bg-dark px-4">
+    <span class="navbar-brand fw-semibold">Mthree Placement</span>
+    <button class="btn btn-outline-light btn-sm">Logout</button>
+</nav>
+
+<div class="container-fluid">
+    <div class="row">
+
+        <!-- SIDEBAR -->
+        <div class="col-md-2 sidebar p-3">
+            <a href="company-dashboard.html"><i class="bi bi-grid"></i> Dashboard</a>
+            <a class="active" href="#"><i class="bi bi-briefcase"></i> My Jobs</a>
+            <a href="company-applications.html"><i class="bi bi-people"></i> Applications</a>
+        </div>
+
+        <!-- MAIN -->
+        <div class="col-md-10 p-4">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-semibold">My Job Postings</h4>
+                <a href="company-post-job.html" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Post Job
+                </a>
+            </div>
+
+            <!-- JOBS WILL LOAD HERE -->
+            <div id="jobsContainer"></div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    const COMPANY_ID = 2;
+
+    async function loadJobs() {
+        try {
+            const res = await fetch("/api/jobs/list");
+            const jobs = await res.json();
+
+            const container = document.getElementById("jobsContainer");
+            container.innerHTML = "";
+
+            const companyJobs = jobs.filter(j => j.companyId === COMPANY_ID);
+
+            if (companyJobs.length === 0) {
+                container.innerHTML = "<p>No jobs posted yet.</p>";
+                return;
+            }
+
+            companyJobs.forEach(job => {
+                container.innerHTML += `
+        <div class="job-card">
+          <h5>${job.title}</h5>
+          <p class="text-muted mb-1">
+            <i class="bi bi-geo-alt"></i> ${job.location} |
+            <i class="bi bi-currency-rupee"></i> ${job.packageLpa} LPA
+          </p>
+
+          <div class="d-flex justify-content-between mt-3">
+            <div>
+              <strong>Min CGPA:</strong> ${job.minCgpa}
+            </div>
+            <div>
+              <strong>Deadline:</strong> ${job.deadline}
+            </div>
+            <a href="company-applications.html" class="btn btn-outline-primary btn-sm">
+              View Applicants
+            </a>
+          </div>
+        </div>
+      `;
+            });
+
+        } catch (err) {
+            console.error("Error loading jobs", err);
+        }
+    }
+
+    window.onload = loadJobs;
+</script>
+
+</body>
+</html>

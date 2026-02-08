@@ -1,0 +1,15 @@
+package com.wiley.student_service.dto;
+
+import lombok.Data;
+import java.util.List;
+
+@Data
+public class StudentRequestDTO {
+    private String userId;
+    private String name;
+    private String email;
+    private String password;
+    private String dept;
+    private Double cgpa;
+    private List<String> skills;
+}
