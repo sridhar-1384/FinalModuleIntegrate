@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>View Applicants</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
+    <style>
+        body {
+            background: linear-gradient(135deg, #eef2f7, #f8f9fb);
+        }
+        .sidebar {
+            background: #0f172a;
+            min-height: 100vh;
+        }
+        .sidebar a {
+            color: #cbd5e1;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            display: block;
+            text-decoration: none;
+        }
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: #1e293b;
+            color: #fff;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 14px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-dark bg-dark px-4">
+    <span class="navbar-brand fw-semibold">Placement Management System</span>
+    <button class="btn btn-outline-light btn-sm" id="login">
+        Login
+    </button>
+
+</nav>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-2 sidebar p-3">
+            <h6 class="text-uppercase text-secondary mb-3">Company Menu</h6>
+            <a href="#"><i class="bi bi-grid me-2"></i>Dashboard</a>
+            <a href="#"><i class="bi bi-briefcase me-2"></i>My Jobs</a>
+            <a href="#" class="active"><i class="bi bi-people me-2"></i>Applications</a>
+        </div>
+        <div class="col-md-10 p-4">
+            <h4 class="fw-semibold mb-4">
+                <button class="btn btn-outline-secondary btn-md me-2" onclick="goBack()">
+                    <i class="bi bi-arrow-left"></i>
+                </button>
+                Applicants (Job ID: <span id="job-id-display">...</span>)
+            </h4>
+
+            <div class="glass-card p-0 overflow-hidden">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                    <tr>
+                        <th class="p-3">ID</th>
+                        <th class="p-3">Student Name</th>
+                        <th class="p-3">Dept</th>
+                        <th class="p-3">CGPA</th>
+                        <th class="p-3">Skills</th>
+                        <th class="p-3">Resume</th>
+                        <th class="p-3">Status</th>
+                        <th class="p-3 text-end">Action</th>
+                    </tr>
+                    </thead>
+                    <tbody id="applicants-table-body">
+                    <tr>
+                        <td colspan="8" class="text-center p-4">Loading applicants...</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function goBack() {
+        window.history.back();
+    }
+    const sec = document.getElementById('login');
+    let token = sessionStorage.getItem('sessionToken');
+    token ? (sec.innerHTML = 'Logout') : (sec.innerHTML = 'Login');
+    sec.addEventListener("click",()=>{
+        console.log("clicked")
+        if(token) sessionStorage.clear()
+        window.location.href="/login.html"
+    })
+
+    const API_BASE = "http://localhost:8084/api/applications";
+    const login_page = "login.html";
+
+    const job_id = new URLSearchParams(window.location.search).get("jobId");
+
+    document.getElementById("job-id-display").innerText = job_id || "None";
+
+    document.addEventListener("DOMContentLoaded", fetchApplications);
+
+    async function fetchApplications() {
+        const tbody = document.getElementById("applicants-table-body");
+
+        if (!token) {
+            alert("You are not logged in.");
+            window.location.href = login_page;
+            return;
+        }
+
+        try {
+            const headers = { "Content-Type": "application/json" };
+            if (token)
+                headers["SESSION-TOKEN"] = token;
+
+            const response = await fetch(`${API_BASE}/job/${job_id}`, {
+                method: "GET",
+                headers: headers,
+            });
+
+            if (response.status === 401) {
+                alert("Session Expired. Please login again.");
+                window.location.href = login_page;
+                return;
+            }
+            if (response.status === 403) {
+                alert("Access Denied: Only HR or PO can view applicants.");
+                return;
+            }
+            if (!response.ok){
+                const e = await response.json();
+                alert(e.message || "Failed to load applicants");
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger p-4">${e.message || "Request Failed"}</td></tr>`;
+                return;
+            }
+
+            const applicants = await response.json();
+
+            if (applicants.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center p-4">No applicants found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = "";
+            applicants.forEach((app) => {
+                const skills = app.studentSkills
+                    ? `<small class="text-muted">${app.studentSkills}</small>`
+                    : "-";
+                const resumeLink = app.resumeUrl
+                    ? `<a href="${app.resumeUrl}" target="_blank" class="btn btn-sm btn-light border"><i class="bi bi-file-earmark-pdf text-danger me-1"></i>PDF</a>`
+                    : '<span class="text-muted small">No Resume</span>';
+
+                const row = `
+                            <tr>
+                                <td class="p-3">${app.id}</td>
+                                <td class="p-3 fw-bold">${app.studentName || "Student ID: " + app.studentId}</td>
+                                <td class="p-3">${app.studentDepartment || "-"}</td>
+                                <td class="p-3">${app.studentCgpa || "-"}</td>
+                                <td class="p-3">${skills}</td>
+                                <td class="p-3">${resumeLink}</td>
+                                <td class="p-3"><span class="badge bg-secondary">${app.status}</span></td>
+                                <td class="p-3 text-end">
+                                    <a href="update-status.html?id=${app.id}" class="btn btn-outline-primary btn-sm">Change Status</a>
+                                </td>
+                            </tr>`;
+                tbody.innerHTML += row;
+            });
+        } catch (e) {
+            console.error(e);
+            tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger p-4">Connection failed.</td></tr>`;
+        }
+    }
+
+
+</script>
+</body>
+</html>
