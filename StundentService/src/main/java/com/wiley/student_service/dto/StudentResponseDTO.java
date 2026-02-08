@@ -15,6 +15,7 @@ public class StudentResponseDTO {
     private String email;
     private String dept;
     private Double cgpa;
+    private String phone;
     private String resumePath;
     private List<StudentSkillResponse> skills;
 }
