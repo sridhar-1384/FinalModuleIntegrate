@@ -11,5 +11,6 @@ public class StudentRequestDTO {
     private String password;
     private String dept;
     private Double cgpa;
+    private String phone;
     private List<String> skills;
 }
