@@ -37,6 +37,7 @@ public class Student {
 
     private String dept;
     private Double cgpa;
+    private String phone;
 
     @Column(name = "resume_path")
     private String resumePath;
