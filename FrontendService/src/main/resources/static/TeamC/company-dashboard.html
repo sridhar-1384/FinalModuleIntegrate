@@ -4,29 +4,17 @@
     <meta charset="UTF-8" />
     <title>Mthree Placement | Company Dashboard</title>
 
-    <!-- Bootstrap CSS -->
-    <link
-            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-            rel="stylesheet"
-    />
-
-    <!-- Bootstrap Icons -->
-    <link
-            href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css"
-            rel="stylesheet"
-    />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet"/>
 
     <style>
         body {
             background: linear-gradient(135deg, #eef2f7, #f8f9fb);
         }
-
-        /* Sidebar */
         .sidebar {
             background: #0f172a;
             min-height: 100vh;
         }
-
         .sidebar a {
             color: #cbd5e1;
             padding: 12px;
@@ -34,16 +22,12 @@
             margin-bottom: 6px;
             display: block;
             text-decoration: none;
-            transition: 0.2s;
         }
-
         .sidebar a:hover,
         .sidebar a.active {
             background: #1e293b;
             color: #fff;
         }
-
-        /* Cards */
         .glass-card {
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(10px);
@@ -55,24 +39,20 @@
 
 <body>
 
-<!-- TOP NAVBAR -->
+<!-- AUTH GUARD -->
+<script>
+    const token = sessionStorage.getItem("sessionToken");
+    console.log("Here geting token:",token);
+    if (!token) {
+        alert("Session expired. Please login again.");
+        window.location.href = "/TeamA/login.html";
+    }
+</script>
+
+<!-- NAVBAR -->
 <nav class="navbar navbar-dark bg-dark px-4">
-    <div class="d-flex align-items-center gap-2">
-
-        <!-- INLINE LOGO -->
-        <svg width="34" height="34" viewBox="0 0 64 64" fill="none"
-             xmlns="http://www.w3.org/2000/svg">
-            <rect width="64" height="64" rx="14" fill="#2563EB"/>
-            <path d="M20 42V22H26L32 30L38 22H44V42H38V31L32 39L26 31V42H20Z"
-                  fill="white"/>
-        </svg>
-
-        <span class="navbar-brand fw-semibold fs-5">
-      Mthree Placement
-    </span>
-    </div>
-
-    <button class="btn btn-outline-light btn-sm">Logout</button>
+    <span class="navbar-brand fw-semibold">Mthree Placement</span>
+    <button id="logoutBtn" class="btn btn-outline-light btn-sm">Logout</button>
 </nav>
 
 <div class="container-fluid">
@@ -85,24 +65,22 @@
             <a class="active" href="company-dashboard.html">
                 <i class="bi bi-grid"></i> Dashboard
             </a>
-
             <a href="company-jobs.html">
                 <i class="bi bi-briefcase"></i> My Jobs
             </a>
-
             <a href="company-applications.html">
                 <i class="bi bi-people"></i> Applications
             </a>
         </div>
 
-        <!-- MAIN CONTENT -->
+        <!-- MAIN -->
         <div class="col-md-10 p-4">
 
             <h4 class="fw-semibold mb-4">
-                Welcome, <span class="text-primary"> Recruiters</span>
+                Welcome, <span class="text-primary" id="companyName"></span>
             </h4>
 
-            <!-- METRIC CARDS -->
+            <!-- METRICS -->
             <div class="row g-4 mb-4">
 
                 <div class="col-md-3">
@@ -126,11 +104,9 @@
             <!-- QUICK ACTIONS -->
             <div class="glass-card p-4">
                 <h6 class="fw-semibold mb-3">Quick Actions</h6>
-
                 <a href="company-post-job.html" class="btn btn-primary me-2">
                     <i class="bi bi-plus-circle"></i> Post New Job
                 </a>
-
                 <a href="company-applications.html" class="btn btn-outline-secondary">
                     <i class="bi bi-eye"></i> View Applications
                 </a>
@@ -140,42 +116,77 @@
     </div>
 </div>
 
-<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- DASHBOARD JS -->
 <script>
-    const COMPANY_ID = 1; // demo company (TCS)
+    // LOGOUT
+    document.getElementById("logoutBtn").onclick = () => {
+        sessionStorage.removeItem("sessionToken");
+        window.location.href = "/TeamA/login.html";
+    };
 
-    async function loadDashboardData() {
+    // LOAD DASHBOARD DATA
+    async function loadDashboard() {
+
         try {
-            const response = await fetch("http://localhost:8083/api/jobs/list");
-            const jobs = await response.json();
 
-            // Filter jobs by company
-            const companyJobs = jobs.filter(
-                job => job.companyId === COMPANY_ID
-            );
 
-            // Update job count
-            document.getElementById("postedJobsCount").innerText =
-                companyJobs.length;
+        // STEP 1 → current user
+        const userRes = await fetch("http://localhost:8081/api/auth/current-user", {
+            headers: {
+                "SESSION-TOKEN": token
+            }
+        });
 
-            // Demo application count (replace later with Application Service)
-            let applications = 0;
-            companyJobs.forEach(job => {
-                applications += job.applicationCount || 5;
+
+        const user = await userRes.json();
+
+        const userId = user.userId;
+
+
+        // STEP 2 → company details
+        const companyRes = await fetch(
+            `http://localhost:8083/api/companies/userId/${userId}`,
+            {
+                headers: {
+                    "SESSION-TOKEN": token
+                }
+            }
+        );
+
+        console.log("Company API status =", companyRes.status);
+
+        const company = await companyRes.json();
+
+
+        // STEP 3 → set name
+        document.getElementById("companyName").innerText = company.name;
+
+            const res = await fetch("http://localhost:8083/api/jobs/my", {
+                headers: {
+                    "SESSION-TOKEN": token
+                }
             });
 
-            document.getElementById("applicationsCount").innerText =
-                applications;
+            if (res.status === 401) {
+                sessionStorage.clear();
+                window.location.href = "login.html";
+                return;
+            }
 
-        } catch (err) {
-            console.error("Dashboard load error:", err);
+            const jobs = await res.json();
+            document.getElementById("postedJobsCount").innerText = jobs.length;
+
+            // Applications count (future service)
+            document.getElementById("applicationsCount").innerText = 0;
+
+
+        } catch (e) {
+            console.error("Dashboard load failed", e);
         }
     }
 
-    window.onload = loadDashboardData;
+    loadDashboard();
 </script>
 
 </body>
