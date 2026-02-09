@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import com.wiley.auth_service.dto.CompanyDTO;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
