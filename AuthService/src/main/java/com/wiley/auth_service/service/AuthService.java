@@ -80,7 +80,7 @@ public class AuthService {
         // -------------------------------------------------------------
 
         StudentRequestDTO dto = new StudentRequestDTO();
-        dto.setUserId(user.getId().toString());
+        dto.setUserId(user.getId());
         dto.setName(req.getName());
         dto.setEmail(req.getEmail());
         dto.setPassword(req.getPassword());
