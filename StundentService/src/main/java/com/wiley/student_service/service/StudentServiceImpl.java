@@ -50,10 +50,11 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
-    public StudentResponseDTO getStudentById(String token,Long id) {
+    public StudentResponseDTO getStudentById(String token) {
         AuthUserDto user = authClient.validateSession(token);
-        Student student = studentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+                Student student = studentRepository.findByUserId(user.getUserId())
+                    .orElseThrow(() -> new RuntimeException("Student not found"));
 
         if(!user.getIsActive()) {
             throw new RuntimeException("Inactive user");
@@ -144,10 +145,11 @@ public class StudentServiceImpl implements StudentService {
     // -------- SKILLS --------
 
     @Override
-    public void addSkill(String token, Long studentId, Long masterSkillId, String level) {
+    public void addSkill(String token, Long masterSkillId, String level) {
 
         AuthUserDto user = authClient.validateSession(token);
-        Student student = studentRepository.findById(studentId).orElseThrow();
+        Student student = studentRepository.findByUserId(user.getUserId())
+                .orElseThrow(() -> new RuntimeException("Student not found"));
 
         authorize(user, student);
 
@@ -184,10 +186,12 @@ public class StudentServiceImpl implements StudentService {
 
     // -------- RESUME --------
 
-    public void uploadResume(String token, Long studentId, MultipartFile file) {
+    public void uploadResume(String token, MultipartFile file) {
 
         AuthUserDto user = authClient.validateSession(token);
-        Student student = studentRepository.findById(studentId).orElseThrow();
+
+        Student student = studentRepository.findByUserId(user.getUserId())
+                    .orElseThrow(() -> new RuntimeException("Student not found"));
 
         authorize(user, student);
 
@@ -207,10 +211,11 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
-    public ResponseEntity<Resource> downloadResume(String token, Long studentId) {
+    public ResponseEntity<Resource> downloadResume(String token) {
 
         AuthUserDto user = authClient.validateSession(token);
-        Student student = studentRepository.findById(studentId).orElseThrow();
+        Student student = studentRepository.findByUserId(user.getUserId())
+                .orElseThrow(() -> new RuntimeException("Student not found"));
 
         authorize(user, student);
 

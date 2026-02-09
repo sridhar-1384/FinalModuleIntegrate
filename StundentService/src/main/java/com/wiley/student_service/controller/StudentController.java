@@ -16,6 +16,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/students")
+@CrossOrigin(origins = "*")
 public class StudentController {
 
     private final StudentService studentService;
@@ -26,8 +27,8 @@ public class StudentController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<StudentResponseDTO> getStudent(@RequestHeader ("Session-Token")String token,@PathVariable Long id) {
-        return ResponseEntity.ok(studentService.getStudentById(token,id));
+    public ResponseEntity<StudentResponseDTO> getStudent(@RequestHeader ("Session-Token")String token) {
+        return ResponseEntity.ok(studentService.getStudentById(token));
     }
 
     @GetMapping("/userId/{user_id}")
@@ -36,11 +37,10 @@ public class StudentController {
     }
 
 
-    @PostMapping("/{studentId}/skills")
+    @PostMapping("add/skills")
     public ResponseEntity<String> addSkill(@RequestHeader("Session-Token") String token,
-                                           @PathVariable Long studentId,
                                            @RequestBody AddSkillRequestDTO req) {
-        studentService.addSkill(token,studentId, req.getMasterSkillId(), req.getLevel());
+        studentService.addSkill(token, req.getMasterSkillId(), req.getLevel());
         return ResponseEntity.status(HttpStatus.CREATED).body("Skill added");
     }
 
@@ -53,16 +53,16 @@ public class StudentController {
     }
 
     // Upload Resume
-    @PostMapping("/{id}/resume")
-    public ResponseEntity<String> uploadResume( @RequestHeader("Session-Token") String token,@PathVariable Long id,
+    @PostMapping("/resume")
+    public ResponseEntity<String> uploadResume( @RequestHeader("Session-Token") String token,
                                                 @RequestParam("file") MultipartFile file) {
-        studentService.uploadResume(token,id, file);
+        studentService.uploadResume(token, file);
         return ResponseEntity.ok("Resume uploaded successfully");
     }
 
     // Download Resume
-    @GetMapping("/{id}/resume/download")
-    public ResponseEntity<Resource> downloadResume( @RequestHeader("Session-Token") String token,@PathVariable Long id) {
-        return studentService.downloadResume(token,id);
+    @GetMapping("/resume/download")
+    public ResponseEntity<Resource> downloadResume( @RequestHeader("Session-Token") String token) {
+        return studentService.downloadResume(token);
     }
 }
