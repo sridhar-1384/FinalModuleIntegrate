@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Application Details</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
+    <style>
+        body {
+            background: linear-gradient(135deg, #eef2f7, #f8f9fb);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 14px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .label {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        .value {
+            font-weight: 500;
+            color: #0f172a;
+            text-align: right;
+        }
+    </style>
+</head>
+<body class="p-4">
+<div class="glass-card p-4 p-md-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0">Application Details</h4>
+        <span id="app-status" class="badge bg-secondary">Loading...</span>
+    </div>
+
+    <div id="details-container">
+        <div class="text-center py-4"><div class="spinner-border text-primary"></div></div>
+    </div>
+
+    <div class="mt-4 pt-3 border-top d-flex justify-content-between">
+        <button class="btn btn-outline-secondary px-4" onclick="history.back()">Back</button>
+    </div>
+</div>
+
+<script>
+    const API_BASE = "http://localhost:8084/api/applications";
+    const login_page = "login.html";
+    const app_id = new URLSearchParams(window.location.search).get("id");
+    const token = sessionStorage.getItem("sessionToken");
+
+    document.addEventListener("DOMContentLoaded", fetchDetails);
+    async function fetchDetails(){
+        if (!token) {
+            alert("Please login first.");
+            window.location.href = login_page;
+            return;
+        }
+
+        if (!app_id) {
+            document.getElementById("details-container").innerHTML =
+                `<div class="alert alert-warning">No Application ID provided.</div>`;
+            return;
+        }
+
+        try {
+            const headers = { "Content-Type": "application/json" };
+            if (token)
+                headers["SESSION-TOKEN"] = token;
+
+            const response = await fetch(`${API_BASE}/${app_id}`, {
+                method: "GET",
+                headers: headers,
+            });
+
+            if (response.status === 401) {
+                alert("Session Expired.");
+                window.location.href = login_page;
+                return;
+            }
+            if (!response.ok) {
+                const e = await response.json();
+                alert(e.message || "An unexpected error occurred.");
+                return;
+            }
+
+            const app = await response.json();
+
+            // Update Status
+            const statusEl = document.getElementById("app-status");
+            statusEl.innerText = app.status;
+            statusEl.className = `badge ${getStatusClass(app.status)}`;
+
+            // Render Details
+            document.getElementById("details-container").innerHTML = `
+                <div class="detail-row"><span class="label">Job Title</span><span class="value">${app.jobTitle || "-"}</span></div>
+                <div class="detail-row"><span class="label">Company</span><span class="value">${app.companyName || "-"}</span></div>
+                <div class="detail-row"><span class="label">Location</span><span class="value">${app.jobLocation || "-"}</span></div>
+                <div class="detail-row"><span class="label">Package</span><span class="value">${app.jobPackage ? app.jobPackage + " LPA" : "-"}</span></div>
+                <div class="detail-row mt-3"><span class="label">Student Name</span><span class="value">${app.studentName || "-"}</span></div>
+                <div class="detail-row"><span class="label">Department</span><span class="value">${app.studentDepartment || "-"}</span></div>
+                <div class="detail-row"><span class="label">Applied On</span><span class="value">${app.appliedDate}</span></div>
+            `;
+        } catch (e) {
+            document.getElementById("details-container").innerHTML =
+                `<div class="alert alert-danger">Error loading details.</div>`;
+        }
+    }
+
+    function getStatusClass(status) {
+        switch (status) {
+            case "SHORTLISTED":
+                return "bg-success";
+            case "SELECTED":
+                return "bg-success";
+            case "REJECTED":
+                return "bg-danger";
+            case "APPLIED":
+                return "bg-primary";
+            default:
+                return "bg-secondary";
+        }
+    }
+</script>
+</body>
+</html>

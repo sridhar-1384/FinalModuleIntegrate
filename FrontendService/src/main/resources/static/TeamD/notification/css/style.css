@@ -1,0 +1,87 @@
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background-color: #f4f6f9;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 260px;
+  height: 100vh;
+  background: linear-gradient(180deg, #0f172a, #020617);
+  position: fixed;
+  color: white;
+}
+
+.sidebar h4 {
+  padding: 20px;
+  margin: 0;
+  border-bottom: 1px solid #1e293b;
+}
+
+.sidebar a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  color: #cbd5e1;
+  text-decoration: none;
+}
+
+.sidebar a:hover,
+.sidebar a.active {
+  background-color: #1e293b;
+  color: white;
+  border-left: 4px solid #3b82f6;
+}
+
+/* Main */
+.main {
+  margin-left: 260px;
+  padding: 25px;
+}
+
+/* Cards */
+.stat-card {
+  background: white;
+  padding: 20px;
+  border-radius: 14px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+.stat-card h6 {
+  color: #6b7280;
+}
+
+.stat-card h2 {
+  font-weight: 700;
+}
+
+/* Content Card */
+.content-card {
+  background: white;
+  padding: 25px;
+  border-radius: 16px;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+}
+
+/* Buttons */
+.btn-primary {
+  background-color: #2563eb;
+  border: none;
+}
+
+.btn-success {
+  background-color: #16a34a;
+  border: none;
+}
+
+/* Badge */
+.badge-unread {
+  background-color: #ef4444;
+}
+
+/* Table */
+.table th {
+  color: #475569;
+}

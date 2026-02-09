@@ -29,6 +29,7 @@
         <module>CompanyandJobService</module>
         <module>ReportingService</module>
         <module>ApplicationService/NotificationService</module>
+        <module>FrontendService</module>
     </modules>
 
     <properties>

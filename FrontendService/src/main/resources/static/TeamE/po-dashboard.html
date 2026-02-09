@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>PO Dashboard</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="css/admin-dashboard.css">
+</head>
+
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-dark bg-dark px-4">
+    <span class="navbar-brand fw-semibold">Placement Management System</span>
+    <button class="btn btn-outline-light btn-sm" id="login">Login</button>
+    <script>
+        const sec = document.getElementById('login');
+        let token = sessionStorage.getItem('sessionToken');
+        sec.innerHTML = token ? 'Logout' : 'Login';
+        sec.addEventListener("click", () => {
+            if (token) sessionStorage.clear();
+            window.location.href = "/login.html";
+        });
+    </script>
+</nav>
+
+<div class="container-fluid">
+    <div class="row">
+
+        <!-- Sidebar -->
+        <div class="col-md-2 sidebar p-3">
+            <h6 class="text-uppercase text-secondary mb-3">Menu</h6>
+
+            <a class="active" href="#">
+                <i class="bi bi-grid me-2"></i>Dashboard
+            </a>
+
+            <a href="placement-report.html">
+                <i class="bi bi-clipboard-data me-2"></i>Placement Report
+            </a>
+
+            <a href="department-report.html">
+                <i class="bi bi-diagram-3 me-2"></i>Department Report
+            </a>
+
+            <a href="student-stats.html">
+                <i class="bi bi-bar-chart me-2"></i>Student Statistics
+            </a>
+
+            <a href="company-report.html">
+                <i class="bi bi-building me-2"></i>Company Report
+            </a>
+
+            <a href="student-list.html">
+                <i class="bi bi-people me-2"></i>Students
+            </a>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-10 p-4">
+
+            <div class="report-title-box mb-4">
+                <h4 class="fw-semibold mb-0">Placement Officer Dashboard</h4>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="row g-4">
+
+                <div class="col-md-4">
+                    <div class="glass-card p-4 text-center">
+                        <i class="bi bi-people fs-2 mb-2"></i>
+                        <h6>Total Students</h6>
+                        <h3 id="totalStudents">0</h3>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="glass-card p-4 text-center">
+                        <i class="bi bi-briefcase fs-2 mb-2"></i>
+                        <h6>Total Jobs</h6>
+                        <h3 id="totalJobs">0</h3>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="glass-card p-4 text-center">
+                        <i class="bi bi-file-earmark-text fs-2 mb-2"></i>
+                        <h6>Total Applications</h6>
+                        <h3 id="totalApplications">0</h3>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="glass-card p-4 text-center">
+                        <i class="bi bi-check-circle fs-2 mb-2"></i>
+                        <h6>Placed Students</h6>
+                        <h3 id="placedStudents">0</h3>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="glass-card p-4 text-center">
+                        <i class="bi bi-currency-rupee fs-2 mb-2"></i>
+                        <h6>Average Package (LPA)</h6>
+                        <h3 id="averagePackage">0.00</h3>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    function loadDashboard() {
+        fetch("http://localhost:8085/api/reports/po-dashboard")
+            // If auth is enabled later:
+            // fetch("http://localhost:8085/api/reports/po-dashboard", {
+            //     headers: { "X-SESSION-TOKEN": sessionStorage.getItem("sessionToken") }
+            // })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("totalStudents").innerText = data.totalStudents;
+                document.getElementById("totalJobs").innerText = data.totalJobs;
+                document.getElementById("totalApplications").innerText = data.totalApplications;
+                document.getElementById("placedStudents").innerText = data.placedStudents;
+                document.getElementById("averagePackage").innerText =
+                    data.averagePackage ? data.averagePackage.toFixed(2) : "0.00";
+            })
+            .catch(err => {
+                console.error("Error loading PO dashboard", err);
+            });
+    }
+
+    loadDashboard();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
