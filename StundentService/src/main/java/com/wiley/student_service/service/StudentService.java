@@ -12,21 +12,23 @@ public interface StudentService {
 
     StudentResponseDTO createStudent(StudentRequestDTO dto);
 
-    StudentResponseDTO getStudentById(Long id);
+    StudentResponseDTO getStudentById(String token,Long id);
 
-    StudentResponseDTO getStudentByUserId(String userId);
+    StudentResponseDTO getStudentByUserId(String token,Long userId);
+
+//    StudentResponseDTO getStudentByUserId(String token, String userId);
 
     List<StudentResponseDTO> getAllStudents();
 
-    StudentResponseDTO updateStudent(Long id, StudentRequestDTO dto);
+    StudentResponseDTO updateStudent(String token,Long id, StudentRequestDTO dto);
 
-    void deleteStudent(Long id);
+    void deleteStudent(String token,Long id);
 
-    void addSkill(Long studentId, Long masterSkillId, String level);
+    void addSkill(String token,Long studentId, Long masterSkillId, String level);
 
-    void uploadResume(Long studentId, MultipartFile file);
+    void uploadResume(String token,Long studentId, MultipartFile file);
 
-    ResponseEntity<Resource> downloadResume(Long studentId);
+    ResponseEntity<Resource> downloadResume(String token,Long studentId);
 
-    void removeSkill(Long studentId, Long masterSkillId);
+    void removeSkill(String token,Long studentId, Long masterSkillId);
 }

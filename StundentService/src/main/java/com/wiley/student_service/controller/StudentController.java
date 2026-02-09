@@ -26,46 +26,43 @@ public class StudentController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<StudentResponseDTO> getStudent(@PathVariable Long id) {
-        return ResponseEntity.ok(studentService.getStudentById(id));
+    public ResponseEntity<StudentResponseDTO> getStudent(@RequestHeader ("Session-Token")String token,@PathVariable Long id) {
+        return ResponseEntity.ok(studentService.getStudentById(token,id));
     }
 
     @GetMapping("/userId/{user_id}")
-    public ResponseEntity<StudentResponseDTO> getStudentByUserId(@PathVariable("user_id") String userId) {
-        return ResponseEntity.ok(studentService.getStudentByUserId(userId));
-    }
-
-    @GetMapping
-    public ResponseEntity<List<StudentResponseDTO>> getAllStudents() {
-        return ResponseEntity.ok(studentService.getAllStudents());
+    public ResponseEntity<StudentResponseDTO> getStudentByUserId(@RequestHeader("Session-Token") String token,@PathVariable("user_id") Long userId) {
+        return ResponseEntity.ok(studentService.getStudentByUserId(token, userId));
     }
 
 
     @PostMapping("/{studentId}/skills")
-    public ResponseEntity<String> addSkill(@PathVariable Long studentId,
+    public ResponseEntity<String> addSkill(@RequestHeader("Session-Token") String token,
+                                           @PathVariable Long studentId,
                                            @RequestBody AddSkillRequestDTO req) {
-        studentService.addSkill(studentId, req.getMasterSkillId(), req.getLevel());
+        studentService.addSkill(token,studentId, req.getMasterSkillId(), req.getLevel());
         return ResponseEntity.status(HttpStatus.CREATED).body("Skill added");
     }
 
     @DeleteMapping("/{studentId}/skills/{masterSkillId}")
-    public ResponseEntity<String> removeSkill(@PathVariable Long studentId,
-                                              @PathVariable Long masterSkillId) {
-        studentService.removeSkill(studentId, masterSkillId);
+    public ResponseEntity<String> removeSkill( @RequestHeader("Session-Token") String token,
+                                               @PathVariable Long studentId,
+                                               @PathVariable Long masterSkillId) {
+        studentService.removeSkill(token,studentId, masterSkillId);
         return ResponseEntity.ok("Skill removed");
     }
 
     // Upload Resume
     @PostMapping("/{id}/resume")
-    public ResponseEntity<String> uploadResume(@PathVariable Long id,
-                                               @RequestParam("file") MultipartFile file) {
-        studentService.uploadResume(id, file);
+    public ResponseEntity<String> uploadResume( @RequestHeader("Session-Token") String token,@PathVariable Long id,
+                                                @RequestParam("file") MultipartFile file) {
+        studentService.uploadResume(token,id, file);
         return ResponseEntity.ok("Resume uploaded successfully");
     }
 
     // Download Resume
     @GetMapping("/{id}/resume/download")
-    public ResponseEntity<Resource> downloadResume(@PathVariable Long id) {
-        return studentService.downloadResume(id);
+    public ResponseEntity<Resource> downloadResume( @RequestHeader("Session-Token") String token,@PathVariable Long id) {
+        return studentService.downloadResume(token,id);
     }
 }

@@ -8,7 +8,7 @@ public interface SkillService {
 
     Iterable<MasterSkill> getAllSkills();
 
-    MasterSkill addSkill(MasterSkill skill);
+    MasterSkill addSkill(String token,MasterSkill skill);
 
     List<MasterSkill> searchSkills(String query);
 }

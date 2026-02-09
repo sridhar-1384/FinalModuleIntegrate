@@ -5,7 +5,7 @@ import java.util.List;
 
 @Data
 public class StudentRequestDTO {
-    private String userId;
+    private Long userId;
     private String name;
     private String email;
     private String password;

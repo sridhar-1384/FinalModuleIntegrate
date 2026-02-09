@@ -24,7 +24,7 @@ public class Student {
     private Long id;
 
     @Column(name = "user_id", nullable = false)
-    private String userId;
+    private Long userId;
 
     @Column(nullable = false)
     private String name;

@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
@@ -17,19 +19,24 @@ public class AdminController {
     private final SkillService service;
 
     @DeleteMapping("/delete-student/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        studentService.deleteStudent(id);
+    public ResponseEntity<Void> delete(@RequestHeader("Session-Token") String token,@PathVariable Long id) {
+        studentService.deleteStudent(token,id);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/add-skill")
-    public MasterSkill addSkill(@RequestBody MasterSkill skill) {
-        return service.addSkill(skill);
+    public MasterSkill addSkill(@RequestHeader("Session-Token") String token,@RequestBody MasterSkill skill) {
+        return service.addSkill(token,skill);
     }
 
     @PutMapping("/update-student/{id}")
-    public ResponseEntity<StudentResponseDTO> updateStudent(@PathVariable Long id,
+    public ResponseEntity<StudentResponseDTO> updateStudent(@RequestHeader("Session-Token") String token,@PathVariable Long id,
                                                             @RequestBody StudentRequestDTO dto) {
-        return ResponseEntity.ok(studentService.updateStudent(id, dto));
+        return ResponseEntity.ok(studentService.updateStudent(token,id, dto));
+    }
+
+    @GetMapping("/students")
+    public ResponseEntity<List<StudentResponseDTO>> getAllStudents() {
+        return ResponseEntity.ok(studentService.getAllStudents());
     }
 }

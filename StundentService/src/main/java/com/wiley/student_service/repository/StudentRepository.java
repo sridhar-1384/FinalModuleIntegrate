@@ -7,5 +7,5 @@ import java.util.Optional;
 //import java.lang.ScopedValue;
 
 public interface StudentRepository extends JpaRepository<Student, Long> {
-    Optional<Student> findByUserId(String userId);
+    Optional<Student> findByUserId(Long userId);
 }

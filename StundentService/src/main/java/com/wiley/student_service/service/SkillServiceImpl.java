@@ -1,5 +1,6 @@
 package com.wiley.student_service.service;
 
+import com.wiley.student_service.dto.AuthUserDto;
 import com.wiley.student_service.entity.MasterSkill;
 import com.wiley.student_service.exception.DuplicateResourceException;
 import com.wiley.student_service.repository.MasterSkillRepository;
@@ -12,6 +13,7 @@ import java.util.List;
 @Service
 public class SkillServiceImpl implements SkillService{
     private final MasterSkillRepository masterSkillRepository;
+    private final AuthClient authClient;
 
     @Override
     public Iterable<MasterSkill> getAllSkills() {
@@ -23,14 +25,23 @@ public class SkillServiceImpl implements SkillService{
     }
 
     @Override
-    public MasterSkill addSkill(MasterSkill skill) {
+    public MasterSkill addSkill(String token,MasterSkill skill) {
 
+        AuthUserDto user=authClient.validateSession(token);
+        if(!user.getIsActive())
+        {
+            throw new RuntimeException("User session is inactive");
+        }
         if (masterSkillRepository.existsByNameIgnoreCase(skill.getName())) {
             throw new DuplicateResourceException(
                     "Skill already exists with name: " + skill.getName()
             );
         }
 
+        if(!user.getRole().equalsIgnoreCase("ADMIN"))
+        {
+            throw new RuntimeException("Only admins can add skills");
+        }
         skill.setActive(true);
         return masterSkillRepository.save(skill);
     }

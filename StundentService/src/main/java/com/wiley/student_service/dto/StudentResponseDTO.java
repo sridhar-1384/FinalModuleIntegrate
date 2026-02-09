@@ -10,7 +10,7 @@ import java.util.List;
 public class StudentResponseDTO {
 
     private Long id;
-    private String userId;
+    private Long userId;
     private String name;
     private String email;
     private String dept;
