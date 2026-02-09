@@ -1,4 +1,4 @@
-    <!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
@@ -160,7 +160,6 @@
         const messageDiv = document.getElementById('message');
         messageDiv.innerHTML = '';
 
-
         if (!companyName || !hrName || !email || !password) {
             messageDiv.innerHTML =
                 "<span class='text-danger'>All fields are required</span>";
@@ -190,6 +189,8 @@
             body: JSON.stringify({
                 email: email,
                 password: password,
+                name:companyName,
+                hrName:hrName,
             }),
         })
             .then((res) => {
