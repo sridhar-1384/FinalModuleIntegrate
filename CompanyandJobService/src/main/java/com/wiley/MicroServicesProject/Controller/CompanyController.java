@@ -26,7 +26,7 @@ public class CompanyController {
     }
 
     @GetMapping("/userId/{userId}")
-    public Company getCompanyByUserId(@PathVariable Long userId) {
+    public Company getCompanyByUserId(@PathVariable("userId") Long userId) {
         return companyService.getCompanyByUserId(userId);
     }
 
