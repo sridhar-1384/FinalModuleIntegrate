@@ -25,11 +25,16 @@ public class CompanyController {
         return companyService.getCompanyById(id);
     }
 
+    @GetMapping("/userId/{userId}")
+    public Company getCompanyByUserId(@PathVariable Long userId) {
+        return companyService.getCompanyByUserId(userId);
+    }
+
+
     @PostMapping("/me")
     public Company createMyCompany(
-            @RequestHeader("Session-Token") String token,
             @RequestBody Company company) {
 
-        return companyService.createMyCompany(token, company);
+        return companyService.createMyCompany( company);
     }
 }
