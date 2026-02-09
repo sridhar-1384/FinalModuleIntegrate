@@ -12,6 +12,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import com.wiley.auth_service.dto.CompanyDTO;
+import com.wiley.auth_service.dto.StudentRequestDTO;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -80,6 +81,24 @@ public class AuthService {
         // ------------------------------------------------------------
         // Call Team-2's POST API here to save student academic details
         // -------------------------------------------------------------
+
+        StudentRequestDTO dto = new StudentRequestDTO();
+        dto.setUserId(user.getId().toString());
+        dto.setName(req.getName());
+        dto.setEmail(req.getEmail());
+        dto.setPassword(req.getPassword());
+        dto.setDept(req.getDepartment());
+        dto.setCgpa(req.getCgpa());
+        dto.setPhone(req.getPhone());
+        dto.setSkills(new ArrayList<>()); // empty list initially
+
+        // Call Team-2 Student-Service POST API
+        webClient.post()
+                .uri("http://localhost:8082/api/students")   // Student-Service port
+                .bodyValue(dto)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
 
         return new RegisterStudentResponse("success", "Student registered successfully!");
     }
