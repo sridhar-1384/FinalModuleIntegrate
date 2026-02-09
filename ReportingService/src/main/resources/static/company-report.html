@@ -21,15 +21,13 @@
     <script>
         const sec = document.getElementById('login');
         let token = sessionStorage.getItem('sessionToken');
-        token ? (sec.innerHTML = 'Logout') : (sec.innerHTML = 'Login');
+        sec.innerHTML = token ? 'Logout' : 'Login';
         sec.addEventListener("click",()=>{
-            console.log("clicked")
-            if(token) sessionStorage.clear()
-            window.location.href="/login.html"
-        })
+            if(token) sessionStorage.clear();
+            window.location.href = "/TeamA/login.html";
+        });
     </script>
 </nav>
-
 
 <div class="container-fluid">
     <div class="row">
@@ -68,7 +66,6 @@
                 <h4 class="fw-semibold mb-0">Company-wise Report</h4>
             </div>
 
-
             <div class="glass-card p-4">
                 <table class="table table-striped">
                     <thead>
@@ -93,7 +90,6 @@
                     </thead>
 
                     <tbody id="reportTableBody">
-                    <!-- Data will be inserted here -->
                     </tbody>
                 </table>
 
@@ -109,8 +105,6 @@
 
     let companyData = [];
 
-
-    // Track sort direction
     const sortState = {
         companyName: true,
         jobsPosted: true,
@@ -143,11 +137,8 @@
             let valB = b[field];
 
             if (typeof valA === "string") {
-                return ascending
-                    ? valA.localeCompare(valB)
-                    : valB.localeCompare(valA);
+                return ascending ? valA.localeCompare(valB) : valB.localeCompare(valA);
             }
-
             return ascending ? valA - valB : valB - valA;
         });
 
@@ -156,11 +147,24 @@
     }
 
     function loadCompanyReport() {
-        fetch("http://localhost:8085/api/reports/company-wise")
-            .then(res => res.json())
+        const token = sessionStorage.getItem("sessionToken");
+        if (!token) {
+            alert("Session expired. Please login again.");
+            window.location.href = "/TeamA/login.html";
+            return;
+        }
+
+        fetch("http://localhost:8085/api/reports/company-wise", {
+            headers: {
+                "X-SESSION-TOKEN": token
+            }
+        })
+            .then(res => {
+                if (!res.ok) throw new Error("Failed to load company report");
+                return res.json();
+            })
             .then(data => {
                 companyData = data;
-
                 companyData.sort((a, b) => a.companyName.localeCompare(b.companyName));
                 renderTable();
             })
@@ -169,59 +173,23 @@
             });
     }
 
-
-    // function loadCompanyReport() {
-    //     const token = sessionStorage.getItem("sessionToken");
-    //     if (!token) {
-    //         alert("Session expired. Please login again.");
-    //         window.location.href = "/login.html";
-    //         return;
-    //     }
-    //
-    //     fetch("http://localhost:8085/api/reports/company-wise", {
-    //         headers: {
-    //             "X-SESSION-TOKEN": token
-    //         }
-    //     })
-    //         .then(res => res.json())
-    //         .then(data => {
-    //             companyData = data;
-    //
-    //             companyData.sort((a, b) => a.companyName.localeCompare(b.companyName));
-    //             renderTable();
-    //         })
-    //         .catch(err => {
-    //             console.error("Error loading company report:", err);
-    //         });
-    // }
-
-
-    // function exportPdf() {
-    //     const token = sessionStorage.getItem("sessionToken");
-    //     if (!token) {
-    //         alert("Session expired. Please login again.");
-    //         window.location.href = "/login.html";
-    //         return;
-    //     }
-    //
-    //     fetch("http://localhost:8085/api/reports/export", {
-    //         headers: {
-    //             "X-SESSION-TOKEN": token
-    //         }
-    //     })
-    //         .then(res => res.blob())
-    //         .then(blob => {
-    //             const url = window.URL.createObjectURL(blob);
-    //             window.open(url, "_blank");
-    //         })
-    //         .catch(err => {
-    //             console.error("Failed to export PDF:", err);
-    //         });
-    // }
-
     function exportPdf() {
-        fetch("http://localhost:8085/api/reports/export")
-            .then(res => res.blob())
+        const token = sessionStorage.getItem("sessionToken");
+        if (!token) {
+            alert("Session expired. Please login again.");
+            window.location.href = "/TeamA/login.html";
+            return;
+        }
+
+        fetch("http://localhost:8085/api/reports/export", {
+            headers: {
+                "X-SESSION-TOKEN": token
+            }
+        })
+            .then(res => {
+                if (!res.ok) throw new Error("Failed to export PDF");
+                return res.blob();
+            })
             .then(blob => {
                 const url = window.URL.createObjectURL(blob);
                 window.open(url, "_blank");
@@ -231,8 +199,6 @@
             });
     }
 
-
-    // Load on page open
     loadCompanyReport();
 </script>
 

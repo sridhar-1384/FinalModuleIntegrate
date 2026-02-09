@@ -23,7 +23,7 @@
         token ? (sec.innerHTML = 'Logout') : (sec.innerHTML = 'Login');
         sec.addEventListener("click",()=>{
             if(token) sessionStorage.clear();
-            window.location.href="/login.html";
+            window.location.href = "/TeamA/login.html";
         });
     </script>
 </nav>
@@ -126,33 +126,38 @@
 
 <script>
     function loadPlacementReport() {
+        const token = sessionStorage.getItem("sessionToken");
+        if (!token) {
+            alert("Session expired. Please login again.");
+            window.location.href = "/TeamA/login.html";
 
-        fetch("http://localhost:8085/api/reports/overview")
+            return;
+        }
 
-<!--        const token = sessionStorage.getItem("sessionToken");-->
-<!--        if (!token) return;-->
-
-<!--        fetch("http://localhost:8085/api/reports/overview", {-->
-<!--            headers: {-->
-<!--                "X-SESSION-TOKEN": token-->
-<!--            }-->
-<!--        })-->
-        .then(res => res.json())
-        .then(data => {
-            document.getElementById("totalStudents").innerText = data.totalStudents;
-            document.getElementById("placedStudents").innerText = data.placedStudents;
-            document.getElementById("placementPercentage").innerText =
-                data.placedPercentage.toFixed(2) + "%";
-            document.getElementById("averagePackage").innerText =
-                data.averagePackage?.toFixed(2) ?? 0;
-            document.getElementById("highestPackage").innerText =
-                data.highestPackage?.toFixed(2) ?? 0;
-            document.getElementById("companiesVisited").innerText =
-                data.companiesVisited;
+        fetch("http://localhost:8085/api/reports/overview", {
+            headers: {
+                "X-SESSION-TOKEN": token
+            }
         })
-        .catch(err => {
-            console.error("Error loading placement report", err);
-        });
+            .then(res => {
+                if (!res.ok) throw new Error("Unauthorized or failed");
+                return res.json();
+            })
+            .then(data => {
+                document.getElementById("totalStudents").innerText = data.totalStudents;
+                document.getElementById("placedStudents").innerText = data.placedStudents;
+                document.getElementById("placementPercentage").innerText =
+                    data.placedPercentage.toFixed(2) + "%";
+                document.getElementById("averagePackage").innerText =
+                    data.averagePackage?.toFixed(2) ?? 0;
+                document.getElementById("highestPackage").innerText =
+                    data.highestPackage?.toFixed(2) ?? 0;
+                document.getElementById("companiesVisited").innerText =
+                    data.companiesVisited;
+            })
+            .catch(err => {
+                console.error("Error loading placement report", err);
+            });
     }
 
     loadPlacementReport();

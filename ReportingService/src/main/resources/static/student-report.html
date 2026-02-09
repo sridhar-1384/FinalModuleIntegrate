@@ -28,11 +28,11 @@
     <script>
         const sec = document.getElementById('login');
         let token = sessionStorage.getItem('sessionToken');
-        token ? (sec.innerHTML = 'Logout') : (sec.innerHTML = 'Login');
+        sec.innerHTML = token ? 'Logout' : 'Login';
         sec.addEventListener("click",()=>{
-            if(token) sessionStorage.clear()
-            window.location.href="/login.html"
-        })
+            if(token) sessionStorage.clear();
+            window.location.href = "/TeamA/login.html";
+        });
     </script>
 </nav>
 
@@ -143,31 +143,22 @@
         const studentId = getStudentIdFromUrl();
         if (!studentId) return;
 
-        const studentRes = await fetch(`http://localhost:8082/api/students/${studentId}`, {
-            headers: {
-                "X-SESSION-TOKEN": token
-            }
-        });
-
-
-        // const token = sessionStorage.getItem("sessionToken");
-        // if (!token) {
-        //     alert("Session expired. Please login again.");
-        //     window.location.href = "/login.html";
-        //     return;
-        // }
+        const token = sessionStorage.getItem("sessionToken");
+        if (!token) {
+            alert("Session expired. Please login again.");
+            window.location.href = "/TeamA/login.html";
+            return;
+        }
 
         try {
             // 1. Load student basic info
+            const studentRes = await fetch(`http://localhost:8082/api/students/${studentId}`, {
+                headers: {
+                    "X-SESSION-TOKEN": token
+                }
+            });
 
-            const studentRes = await fetch(`http://localhost:8082/api/students/${studentId}`);
-
-
-            // const studentRes = await fetch(`http://localhost:8082/api/students/${studentId}`, {
-            //     headers: {
-            //         "X-SESSION-TOKEN": token
-            //     }
-            // });
+            if (!studentRes.ok) throw new Error("Failed to load student");
 
             const student = await studentRes.json();
 
@@ -176,16 +167,13 @@
             document.getElementById("studentDept").innerText = student.department ?? "-";
 
             // 2. Load report data
+            const reportRes = await fetch(`http://localhost:8085/api/reports/student/${studentId}`, {
+                headers: {
+                    "X-SESSION-TOKEN": token
+                }
+            });
 
-            const reportRes = await fetch(`http://localhost:8085/api/reports/student/${studentId}`);
-
-
-
-            // const reportRes = await fetch(`http://localhost:8085/api/reports/student/${studentId}`, {
-            //     headers: {
-            //         "X-SESSION-TOKEN": token
-            //     }
-            // });
+            if (!reportRes.ok) throw new Error("Failed to load report");
 
             const report = await reportRes.json();
 
@@ -204,7 +192,7 @@
                     <td>${item.jobTitle}</td>
                     <td class="${statusClass}">${item.status}</td>
                 </tr>
-            `;
+                `;
                 tbody.innerHTML += row;
             });
 
@@ -212,7 +200,6 @@
             console.error("Failed to load student report:", e);
         }
     }
-
 
     loadStudentReport();
 </script>
