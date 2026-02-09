@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -23,6 +24,7 @@ public class AuthService {
     private final SessionRepository sessionRepository;
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder encoder;
+    private final WebClient webClient;
 
     //------------- sridhar --------------------------
 
@@ -95,7 +97,24 @@ public class AuthService {
         user.setRole(Role.COMPANY_HR);
         user.setIsActive(true);
 
-        userRepository.save(user);
+         Users returned=userRepository.save(user);
+
+        
+        //----------------PAVAN----------------------
+        CompanyDTO companyDTO= CompanyDTO.builder()
+                .userId(returned.getId())
+                .hrName(request.getHrName())
+                .name(request.getName())
+                .hrEmail(request.getEmail())
+                .build();
+
+        webClient.post()
+                .uri("http://localhost:8083/api/companies/me")
+                .bodyValue(companyDTO)
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+
     }
 
     // ------------------------ riya --------------------------------------------
