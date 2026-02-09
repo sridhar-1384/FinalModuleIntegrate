@@ -1,0 +1,74 @@
+body {
+    margin: 0;
+    font-family: "Segoe UI", Roboto, sans-serif;
+    background-color: #f4f6f8;
+}
+
+/* NAVBAR */
+.app-navbar {
+    height: 58px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+/* LAYOUT */
+.app-layout {
+    display: flex;
+    margin-top: 58px;
+    height: calc(100vh - 58px);
+}
+
+/* SIDEBAR */
+.sidebar {
+    width: 220px;
+    background-color: #ffffff;
+    border-right: 1px solid #e0e0e0;
+    padding: 20px;
+}
+
+.sidebar-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6c757d;
+    margin-bottom: 12px;
+}
+
+.sidebar-link {
+    display: block;
+    padding: 10px 12px;
+    border-radius: 6px;
+    color: #2c3e50;
+    text-decoration: none;
+    margin-bottom: 6px;
+    cursor: pointer;
+}
+
+.sidebar-link:hover {
+    background-color: #f1f3f5;
+}
+
+.sidebar-link.active {
+    background-color: #e8f0fe;
+    color: #1a73e8;
+    font-weight: 500;
+}
+
+.sidebar-divider {
+    height: 1px;
+    background-color: #e0e0e0;
+    margin: 12px 0;
+}
+
+/* MAIN */
+.main-content {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+}
+
+/* CARDS */
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
