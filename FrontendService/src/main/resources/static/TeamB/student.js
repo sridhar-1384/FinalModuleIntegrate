@@ -1,4 +1,19 @@
+(function() {
+    // Check immediately on script load
+    if (!sessionStorage.getItem("sessionToken")) {
+        window.location.href = "/login.html";
+        return;
+    }
 
+    // Also check when page becomes visible (back/forward navigation)
+    document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'visible') {
+            if (!sessionStorage.getItem("sessionToken")) {
+                window.location.href = "/TeamA/login.html";
+            }
+        }
+    });
+})();
 // -------- GLOBAL VARIABLES --------
 let resumePath = null;
 const addedSkillIds = new Set();
@@ -373,3 +388,4 @@ function goPage(page) {
 document.addEventListener('DOMContentLoaded', () => {
     loadStudentProfile();
 });
+
