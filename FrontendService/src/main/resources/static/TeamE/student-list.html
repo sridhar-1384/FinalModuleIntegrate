@@ -18,11 +18,11 @@
     <script>
         const sec = document.getElementById('login');
         let token = sessionStorage.getItem('sessionToken');
-        token ? (sec.innerHTML = 'Logout') : (sec.innerHTML = 'Login');
+        sec.innerHTML = token ? 'Logout' : 'Login';
         sec.addEventListener("click",()=>{
-            if(token) sessionStorage.clear()
-            window.location.href="/login.html"
-        })
+            if(token) sessionStorage.clear();
+            window.location.href = "/TeamA/login.html";
+        });
     </script>
 </nav>
 
@@ -55,6 +55,18 @@
             <a class="active" href="#">
                 <i class="bi bi-people me-2"></i>Students
             </a>
+
+            <a href="/TeamC/po-jobs-list.html">
+                <i class="bi bi-briefcase me-2"></i>All Jobs
+            </a>
+
+            <a href="/TeamD/po-applications.html">
+                <i class="bi bi-file-earmark-text me-2"></i>Applications
+            </a>
+<!--            <a href="/TeamB/po-student-details.html">-->
+<!--                <i class="bi bi-person-badge me-2"></i>Student Details-->
+<!--            </a>-->
+
         </div>
 
         <!-- Main -->
@@ -108,23 +120,22 @@
         const tbody = document.getElementById("studentTableBody");
         tbody.innerHTML = "";
 
-        // const token = sessionStorage.getItem("sessionToken");
-        // if (!token) {
-        //     alert("Session expired. Please login again.");
-        //     window.location.href = "/login.html";
-        //     return;
-        // }
+        const token = sessionStorage.getItem("sessionToken");
+        if (!token) {
+            alert("Session expired. Please login again.");
+            window.location.href = "/TeamA/login.html";
+            return;
+        }
 
         try {
             // 1. Fetch students
-            const studentsRes = await fetch("http://localhost:8082/api/students/list");
+            const studentsRes = await fetch("http://localhost:8082/api/students/list", {
+                headers: {
+                    "X-SESSION-TOKEN": token
+                }
+            });
 
-            // const studentsRes = await fetch("http://localhost:8082/api/students/list", {
-            //     headers: {
-            //         "X-SESSION-TOKEN": token
-            //     }
-            // });
-
+            if (!studentsRes.ok) throw new Error("Failed to load students");
 
             const students = await studentsRes.json();
 
@@ -133,13 +144,13 @@
                 const name = s.name || "Student";
 
                 // 2. Fetch report stats for each student
-                const statsRes = await fetch(`http://localhost:8085/api/reports/student/${id}`);
+                const statsRes = await fetch(`http://localhost:8085/api/reports/student/${id}`, {
+                    headers: {
+                        "X-SESSION-TOKEN": token
+                    }
+                });
 
-                // const statsRes = await fetch(`http://localhost:8085/api/reports/student/${id}`, {
-                //     headers: {
-                //         "X-SESSION-TOKEN": token
-                //     }
-                // });
+                if (!statsRes.ok) throw new Error("Failed to load stats for student " + id);
 
                 const stats = await statsRes.json();
 
@@ -148,7 +159,6 @@
 
                 let status = "NOT_APPLIED";
 
-                // Check if any application is SELECTED
                 if (stats.history && stats.history.some(h => h.status === "SELECTED")) {
                     status = "SELECTED";
                 } else if (shortlisted > 0) {

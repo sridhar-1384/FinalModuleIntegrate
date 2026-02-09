@@ -32,7 +32,7 @@
         sec.addEventListener("click",()=>{
             console.log("clicked")
             if(token) sessionStorage.clear()
-            window.location.href="/login.html"
+            window.location.href = "/TeamA/login.html";
         })
     </script>
 </nav>
@@ -141,22 +141,25 @@
 
 <script>
     function loadStats() {
-        // const token = sessionStorage.getItem("sessionToken");
-        //
-        // if (!token) {
-        //     alert("Session expired. Please login again.");
-        //     window.location.href = "/login.html";
-        //     return;
-        // }
+        const token = sessionStorage.getItem("sessionToken");
 
-        // fetch("http://localhost:8085/api/reports/student", {
-        //     headers: {
-        //         "X-SESSION-TOKEN": token
-        //     }
-        // })
-        fetch("http://localhost:8085/api/reports/student")
+        if (!token) {
+            alert("Session expired. Please login again.");
+            window.location.href = "/TeamA/login.html";
+            return;
+        }
 
-            .then(res => res.json())
+        fetch("http://localhost:8085/api/reports/student", {
+            headers: {
+                "X-SESSION-TOKEN": token
+            }
+        })
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error("Failed to load student statistics");
+                }
+                return res.json();
+            })
             .then(data => {
                 document.getElementById("totalStudents").innerText = data.totalStudents;
                 document.getElementById("appliedStudents").innerText = data.appliedStudents;
@@ -170,10 +173,10 @@
             });
     }
 
-
     // Load once when page opens
     loadStats();
 </script>
+
 
 
 

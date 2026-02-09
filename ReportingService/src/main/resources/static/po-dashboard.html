@@ -22,7 +22,7 @@
         sec.innerHTML = token ? 'Logout' : 'Login';
         sec.addEventListener("click", () => {
             if (token) sessionStorage.clear();
-            window.location.href = "/login.html";
+            window.location.href = "/TeamA/login.html";
         });
     </script>
 </nav>
@@ -117,12 +117,22 @@
 
 <script>
     function loadDashboard() {
-        fetch("http://localhost:8085/api/reports/po-dashboard")
-            // If auth is enabled later:
-            // fetch("http://localhost:8085/api/reports/po-dashboard", {
-            //     headers: { "X-SESSION-TOKEN": sessionStorage.getItem("sessionToken") }
-            // })
-            .then(res => res.json())
+        const token = sessionStorage.getItem("sessionToken");
+        if (!token) {
+            alert("Session expired. Please login again.");
+            window.location.href = "/TeamA/login.html";
+            return;
+        }
+
+        fetch("http://localhost:8085/api/reports/po-dashboard", {
+            headers: {
+                "X-SESSION-TOKEN": token
+            }
+        })
+            .then(res => {
+                if (!res.ok) throw new Error("Unauthorized or failed");
+                return res.json();
+            })
             .then(data => {
                 document.getElementById("totalStudents").innerText = data.totalStudents;
                 document.getElementById("totalJobs").innerText = data.totalJobs;
