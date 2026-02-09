@@ -44,11 +44,10 @@ public class StudentController {
         return ResponseEntity.status(HttpStatus.CREATED).body("Skill added");
     }
 
-    @DeleteMapping("/{studentId}/skills/{masterSkillId}")
+    @DeleteMapping("/skills/{masterSkillId}")
     public ResponseEntity<String> removeSkill( @RequestHeader("Session-Token") String token,
-                                               @PathVariable Long studentId,
-                                               @PathVariable Long masterSkillId) {
-        studentService.removeSkill(token,studentId, masterSkillId);
+                                               @PathVariable("masterSkillId") Long masterSkillId) {
+        studentService.removeSkill(token, masterSkillId);
         return ResponseEntity.ok("Skill removed");
     }
 

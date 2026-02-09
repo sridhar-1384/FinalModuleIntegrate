@@ -213,7 +213,7 @@ async function addSkill() {
 }
 
 // -------- REMOVE SKILL --------
-async function removeSkill(skillId) {
+async function removeSkill(masterSkillId) {
     const sessionToken = getSessionToken();
     if (!sessionToken) return;
 
@@ -222,7 +222,7 @@ async function removeSkill(skillId) {
     }
 
     try {
-        const res = await fetch(`http://localhost:8082/api/students/skills/${skillId}`, {
+        const res = await fetch(`http://localhost:8082/api/students/skills/${masterSkillId}`, {
             method: 'DELETE',
             headers: {
                 'Session-Token': sessionToken

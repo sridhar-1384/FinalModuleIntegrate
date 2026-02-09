@@ -168,10 +168,11 @@ public class StudentServiceImpl implements StudentService {
 
 
     @Override
-    public void removeSkill(String token, Long studentId, Long masterSkillId) {
+    public void removeSkill(String token,Long masterSkillId) {
 
         AuthUserDto user = authClient.validateSession(token);
-        Student student = studentRepository.findById(studentId).orElseThrow();
+        Student student = studentRepository.findByUserId(user.getUserId())
+                .orElseThrow(() -> new RuntimeException("Student not found"));
 
         authorize(user, student);
 

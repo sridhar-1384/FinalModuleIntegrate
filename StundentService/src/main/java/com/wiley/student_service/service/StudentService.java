@@ -30,5 +30,5 @@ public interface StudentService {
 
     ResponseEntity<Resource> downloadResume(String token);
 
-    void removeSkill(String token,Long studentId, Long masterSkillId);
+    void removeSkill(String token, Long masterSkillId);
 }
