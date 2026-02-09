@@ -29,26 +29,31 @@ public class CompanyService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company not found"));
     }
 
-    public Company createMyCompany(String token, Company company) {
+    public Company getCompanyByUserId(Long userId) {
+        return companyRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Company not found"));
+    }
 
-        AuthUser user = authClient.validate(token);
+    public Company createMyCompany( Company company) {
 
-        if (user == null || user.getUserId() == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid session");
-        }
-
-        if (!"COMPANY_HR".equals(user.getRole())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Only COMPANY_HR can create company profile");
-        }
-
-        // Prevent duplicates: one userId -> one company
-        companyRepository.findByUserId(user.getUserId()).ifPresent(c -> {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Company profile already exists for this user");
-        });
-
-        company.setUserId(user.getUserId());
+//        AuthUser user = authClient.validate(token);
+//
+//        if (user == null || user.getUserId() == null) {
+//            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid session");
+//        }
+//
+//        if (!"COMPANY_HR".equals(user.getRole())) {
+//            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+//                    "Only COMPANY_HR can create company profile");
+//        }
+//
+//        // Prevent duplicates: one userId -> one company
+//        companyRepository.findByUserId(user.getUserId()).ifPresent(c -> {
+//            throw new ResponseStatusException(HttpStatus.CONFLICT,
+//                    "Company profile already exists for this user");
+//        });
+//
+//        company.setUserId(user.getUserId());
         return companyRepository.save(company);
     }
 }
