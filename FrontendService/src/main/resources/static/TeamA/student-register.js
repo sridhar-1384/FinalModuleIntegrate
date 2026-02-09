@@ -10,10 +10,9 @@ document.getElementById("regForm").addEventListener("submit", async function(e){
         phone: document.getElementById("phone").value
     };
 
-
-    let res = await fetch("/api/auth/register-student", {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
+    let res = await fetch("http://localhost:8081/api/auth/register-student", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body)
     });
 
@@ -21,9 +20,10 @@ document.getElementById("regForm").addEventListener("submit", async function(e){
 
     if (data.status === "error") {
         alert(data.message);
-        return;   // stay on same page
+        return;
     }
 
     alert(data.message);
-    window.location.href = "/login.html";  // redirect only on success
+    window.location.href = "login.html";
 });
+
