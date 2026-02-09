@@ -85,4 +85,6 @@ public class ApplicationController {
             @RequestHeader(value = "SESSION-TOKEN", required = false) String token) {
         return applicationService.getAllApplications(token);
     }
+
+
 }
