@@ -129,9 +129,9 @@
 
         try {
             // 1. Fetch students
-            const studentsRes = await fetch("http://localhost:8082/api/students/list", {
+            const studentsRes = await fetch("http://localhost:8082/api/admin/students", {
                 headers: {
-                    "X-SESSION-TOKEN": token
+                    "SESSION-TOKEN": token
                 }
             });
 
@@ -146,7 +146,7 @@
                 // 2. Fetch report stats for each student
                 const statsRes = await fetch(`http://localhost:8085/api/reports/student/${id}`, {
                     headers: {
-                        "X-SESSION-TOKEN": token
+                        "SESSION-TOKEN": token
                     }
                 });
 
