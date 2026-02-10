@@ -113,7 +113,7 @@ public class AuthService {
         user.setPassword(encoder.encode(request.getPassword()));
         user.setRole(Role.COMPANY_HR);
         user.setIsActive(true);
-
+        user.setName(request.getHrName());
          Users returned=userRepository.save(user);
 
         
