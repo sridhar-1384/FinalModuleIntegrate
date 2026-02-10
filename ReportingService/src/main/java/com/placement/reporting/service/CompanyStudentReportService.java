@@ -1,38 +1,27 @@
 package com.placement.reporting.service;
 
-import com.lowagie.text.pdf.PdfPTable;
-import com.placement.reporting.client.ApplicationClient;
-import com.placement.reporting.client.CompanyClient;
-import com.placement.reporting.client.StudentClient;
-import com.placement.reporting.dto.ApplicationHistoryDto;
-import com.placement.reporting.dto.CompanyReportDto;
-import com.placement.reporting.dto.StudentOverallStatsDto;
 import com.lowagie.text.Document;
 import com.lowagie.text.Paragraph;
+import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
-
-import com.placement.reporting.dto.StudentStatsDto;
+import com.placement.reporting.dto.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.ByteArrayOutputStream;
-import java.util.List;
+import java.util.*;
 
 @Service
+@SuppressWarnings("unchecked")
 public class CompanyStudentReportService {
 
-    private final CompanyClient companyClient;
-    private final ApplicationClient applicationClient;
-    private final StudentClient studentClient;
+    private final WebClient webClient;
 
-    public CompanyStudentReportService(CompanyClient companyClient,
-                                       ApplicationClient applicationClient,
-                                       StudentClient studentClient) {
-        this.companyClient = companyClient;
-        this.applicationClient = applicationClient;
-        this.studentClient = studentClient;
+    public CompanyStudentReportService(WebClient webClient) {
+        this.webClient = webClient;
     }
 
     // =========================
@@ -40,71 +29,96 @@ public class CompanyStudentReportService {
     // =========================
     public List<CompanyReportDto> getCompanyWiseReport() {
 
-        var companies = companyClient.getAllCompanies();
-        var jobs = companyClient.getAllJobs();
+        List<Map<String, Object>> companies = webClient.get()
+                .uri("http://localhost:8083/api/companies/list")
+                .retrieve()
+                .bodyToMono(List.class)
+                .block();
 
-        List<CompanyReportDto> result = new java.util.ArrayList<>();
+        List<Map<String, Object>> jobs = webClient.get()
+                .uri("http://localhost:8083/api/jobs/list")
+                .retrieve()
+                .bodyToMono(List.class)
+                .block();
 
-        for (var company : companies) {
+        List<CompanyReportDto> result = new ArrayList<>();
 
-            var companyJobs = jobs.stream()
-                    .filter(job -> job.getCompanyId().equals(company.getId()))
+        for (Map<String, Object> company : companies) {
+
+            Long companyId = Long.valueOf(company.get("id").toString());
+            String companyName = String.valueOf(company.get("name"));
+
+            List<Map<String, Object>> companyJobs = jobs.stream()
+                    .filter(j -> companyId.equals(
+                            Long.valueOf(j.get("companyId").toString())))
                     .toList();
 
             int jobsPosted = companyJobs.size();
             int totalHired = 0;
             double totalPackage = 0.0;
 
-            for (var job : companyJobs) {
+            for (Map<String, Object> job : companyJobs) {
 
-                var applications = applicationClient.getApplicationsByJob(job.getId());
+                Long jobId = Long.valueOf(job.get("id").toString());
+                double pkg = Double.parseDouble(job.get("package").toString());
 
-                int hiredForJob = (int) applications.stream()
-                        .filter(app -> "SELECTED".equalsIgnoreCase(app.getStatus()))
+                List<Map<String, Object>> applications = webClient.get()
+                        .uri("http://localhost:8084/api/applications/job/{id}", jobId)
+                        .retrieve()
+                        .bodyToMono(List.class)
+                        .block();
+
+                int hired = (int) applications.stream()
+                        .filter(a -> "SELECTED".equalsIgnoreCase(
+                                String.valueOf(a.get("status"))))
                         .count();
 
-                totalHired += hiredForJob;
-
-                if (hiredForJob > 0) {
-                    totalPackage += job.getPackageAmount();
-                }
+                totalHired += hired;
+                if (hired > 0) totalPackage += pkg;
             }
 
             double avgPackage = (jobsPosted > 0 && totalHired > 0)
                     ? totalPackage / jobsPosted
                     : 0.0;
 
-            CompanyReportDto dto = new CompanyReportDto(
-                    company.getName(),
+            result.add(new CompanyReportDto(
+                    companyName,
                     jobsPosted,
                     totalHired,
                     avgPackage
-            );
-
-            result.add(dto);
+            ));
         }
 
         return result;
     }
 
     // =========================
-    // Overall Student Statistics (Admin View)
+    // Overall Student Statistics
     // =========================
     public StudentOverallStatsDto getStudentOverallStats() {
 
-        var students = studentClient.getAllStudents();
-        int totalStudents = students.size();
+        List<Map<String, Object>> students = webClient.get()
+                .uri("http://localhost:8082/api/students/list")
+                .retrieve()
+                .bodyToMono(List.class)
+                .block();
 
+        int totalStudents = students.size();
         int appliedStudents = 0;
         int shortlistedStudents = 0;
         int selectedStudents = 0;
         int appliedNotShortlisted = 0;
         int neverApplied = 0;
 
-        for (var student : students) {
+        for (Map<String, Object> student : students) {
+
             Long studentId = Long.valueOf(student.get("id").toString());
 
-            var applications = applicationClient.getApplicationsByStudent(studentId);
+            List<Map<String, Object>> applications = webClient.get()
+                    .uri("http://localhost:8084/api/applications/student/{id}", studentId)
+                    .retrieve()
+                    .bodyToMono(List.class)
+                    .block();
 
             if (applications.isEmpty()) {
                 neverApplied++;
@@ -113,23 +127,17 @@ public class CompanyStudentReportService {
 
             appliedStudents++;
 
-            boolean hasShortlisted = applications.stream()
-                    .anyMatch(app -> "SHORTLISTED".equalsIgnoreCase(app.getStatus()));
+            boolean shortlisted = applications.stream()
+                    .anyMatch(a -> "SHORTLISTED".equalsIgnoreCase(
+                            String.valueOf(a.get("status"))));
 
-            boolean hasSelected = applications.stream()
-                    .anyMatch(app -> "SELECTED".equalsIgnoreCase(app.getStatus()));
+            boolean selected = applications.stream()
+                    .anyMatch(a -> "SELECTED".equalsIgnoreCase(
+                            String.valueOf(a.get("status"))));
 
-            if (hasShortlisted) {
-                shortlistedStudents++;
-            }
-
-            if (hasSelected) {
-                selectedStudents++;
-            }
-
-            if (!hasShortlisted && !hasSelected) {
-                appliedNotShortlisted++;
-            }
+            if (shortlisted) shortlistedStudents++;
+            if (selected) selectedStudents++;
+            if (!shortlisted && !selected) appliedNotShortlisted++;
         }
 
         StudentOverallStatsDto dto = new StudentOverallStatsDto();
@@ -147,30 +155,25 @@ public class CompanyStudentReportService {
     // Export PDF Report
     // =========================
     public ResponseEntity<byte[]> exportPdfReport() {
+
         try {
-            // 1. Get company report data
             List<CompanyReportDto> reportData = getCompanyWiseReport();
 
-            // 2. Create PDF in memory
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             Document document = new Document();
             PdfWriter.getInstance(document, out);
 
             document.open();
-
-            // 3. Title
             document.add(new Paragraph("Company-wise Placement Report"));
             document.add(new Paragraph(" "));
             document.add(new Paragraph(" "));
 
-            // 4. Table with 4 columns
             PdfPTable table = new PdfPTable(4);
             table.addCell("Company");
             table.addCell("Jobs Posted");
             table.addCell("Students Hired");
             table.addCell("Avg Package (LPA)");
 
-            // 5. Fill table data
             for (CompanyReportDto dto : reportData) {
                 table.addCell(dto.getCompanyName());
                 table.addCell(String.valueOf(dto.getJobsPosted()));
@@ -181,13 +184,11 @@ public class CompanyStudentReportService {
             document.add(table);
             document.close();
 
-            // 6. Return as downloadable PDF
-            byte[] pdfBytes = out.toByteArray();
-
             return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=company-report.pdf")
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=company-report.pdf")
                     .contentType(MediaType.APPLICATION_PDF)
-                    .body(pdfBytes);
+                    .body(out.toByteArray());
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -195,55 +196,74 @@ public class CompanyStudentReportService {
         }
     }
 
+    // =========================
+    // Student Stats (Individual)
+    // =========================
     public StudentStatsDto getStudentStats(Long studentId) {
 
-        // 1. Get all applications of this student (from Application Service)
-        var applications = applicationClient.getApplicationsByStudent(studentId);
+        List<Map<String, Object>> applications = webClient.get()
+                .uri("http://localhost:8084/api/applications/student/{id}", studentId)
+                .retrieve()
+                .bodyToMono(List.class)
+                .block();
 
         StudentStatsDto stats = new StudentStatsDto();
         stats.setTotalApplications(applications.size());
 
-        int shortlistedCount = (int) applications.stream()
-                .filter(app -> "SHORTLISTED".equalsIgnoreCase(app.getStatus()))
+        int shortlisted = (int) applications.stream()
+                .filter(a -> "SHORTLISTED".equalsIgnoreCase(
+                        String.valueOf(a.get("status"))))
                 .count();
 
-        stats.setShortlisted(shortlistedCount);
+        stats.setShortlisted(shortlisted);
 
-        // 2. Get all jobs and companies (to map names)
-        var jobs = companyClient.getAllJobs();
-        var companies = companyClient.getAllCompanies();
+        List<Map<String, Object>> jobs = webClient.get()
+                .uri("http://localhost:8083/api/jobs/list")
+                .retrieve()
+                .bodyToMono(List.class)
+                .block();
 
-        List<ApplicationHistoryDto> history = new java.util.ArrayList<>();
+        List<Map<String, Object>> companies = webClient.get()
+                .uri("http://localhost:8083/api/companies/list")
+                .retrieve()
+                .bodyToMono(List.class)
+                .block();
 
-        for (var app : applications) {
+        List<ApplicationHistoryDto> history = new ArrayList<>();
 
-            var jobOpt = jobs.stream()
-                    .filter(j -> j.getId().equals(app.getJobId()))
-                    .findFirst();
+        for (Map<String, Object> app : applications) {
 
-            if (jobOpt.isPresent()) {
-                var job = jobOpt.get();
+            Long jobId = Long.valueOf(app.get("jobId").toString());
 
-                var companyOpt = companies.stream()
-                        .filter(c -> c.getId().equals(job.getCompanyId()))
-                        .findFirst();
+            Map<String, Object> job = jobs.stream()
+                    .filter(j -> jobId.equals(
+                            Long.valueOf(j.get("id").toString())))
+                    .findFirst()
+                    .orElse(null);
 
-                String companyName = companyOpt.map(c -> c.getName()).orElse("Unknown");
+            if (job != null) {
 
-                ApplicationHistoryDto item = new ApplicationHistoryDto(
+                Long companyId = Long.valueOf(job.get("companyId").toString());
+
+                Map<String, Object> company = companies.stream()
+                        .filter(c -> companyId.equals(
+                                Long.valueOf(c.get("id").toString())))
+                        .findFirst()
+                        .orElse(null);
+
+                String companyName = company != null
+                        ? String.valueOf(company.get("name"))
+                        : "Unknown";
+
+                history.add(new ApplicationHistoryDto(
                         companyName,
-                        job.getTitle(),
-                        app.getStatus()
-                );
-
-                history.add(item);
+                        String.valueOf(job.get("title")),
+                        String.valueOf(app.get("status"))
+                ));
             }
         }
 
         stats.setHistory(history);
         return stats;
     }
-
-
-
 }

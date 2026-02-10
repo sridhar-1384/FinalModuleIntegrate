@@ -46,9 +46,9 @@
     <div class="row">
         <div class="col-md-2 sidebar p-3">
             <h6 class="text-uppercase text-secondary mb-3">Company Menu</h6>
-            <a href="#"><i class="bi bi-grid me-2"></i>Dashboard</a>
-            <a href="#"><i class="bi bi-briefcase me-2"></i>My Jobs</a>
-            <a href="#" class="active"><i class="bi bi-people me-2"></i>Applications</a>
+            <a href="../TeamB/student.html"><i class="bi bi-grid me-2"></i>Dashboard</a>
+            <a href="../TeamC/company-jobs.html"><i class="bi bi-briefcase me-2"></i>My Jobs</a>
+<!--            <a href="#" class="active"><i class="bi bi-people me-2"></i>Applications</a>-->
         </div>
         <div class="col-md-10 p-4">
             <h4 class="fw-semibold mb-4">
@@ -93,11 +93,11 @@
     sec.addEventListener("click",()=>{
         console.log("clicked")
         if(token) sessionStorage.clear()
-        window.location.href="/login.html"
+        window.location.href="../TeamA/login.html"
     })
 
     const API_BASE = "http://localhost:8084/api/applications";
-    const login_page = "login.html";
+    const login_page = "../TeamA/login.html";
 
     const job_id = new URLSearchParams(window.location.search).get("jobId");
 

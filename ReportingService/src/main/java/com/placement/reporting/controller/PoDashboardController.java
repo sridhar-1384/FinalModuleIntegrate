@@ -11,12 +11,16 @@ public class PoDashboardController {
 
     private final PoDashboardService poDashboardService;
 
-    public PoDashboardController(PoDashboardService poDashboardService) {
+    public PoDashboardController(
+            PoDashboardService poDashboardService) {
         this.poDashboardService = poDashboardService;
     }
 
+    // Placement Officer dashboard summary
     @GetMapping("/po-dashboard")
     public ResponseEntity<PoDashboardDto> getPoDashboard() {
-        return ResponseEntity.ok(poDashboardService.getDashboardData());
+        PoDashboardDto dashboard =
+                poDashboardService.getDashboardData();
+        return ResponseEntity.ok(dashboard);
     }
 }

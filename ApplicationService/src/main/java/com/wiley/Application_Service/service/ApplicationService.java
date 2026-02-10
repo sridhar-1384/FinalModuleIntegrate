@@ -25,16 +25,11 @@ public class ApplicationService {
     private final ApplicationRepository applicationRepository;
     private final WebClient.Builder webClientBuilder;
 
-    // --- MOCK URLS ---
-    private static final String AUTH_SERVICE_URL = "http://localhost:8084/api/auth";
-    private static final String STUDENT_SERVICE_URL = "http://localhost:8084/mock";
-    private static final String JOB_SERVICE_URL = "http://localhost:8084/mock";
-    private static final String COMPANY_SERVICE_URL = "http://localhost:8084/mock";
 
-//    private static final String AUTH_SERVICE_URL = "http://localhost:8081/api/auth";
-//    private static final String STUDENT_SERVICE_URL = "http://localhost:8082";
-//    private static final String JOB_SERVICE_URL = "http://localhost:8083";
-//    private static final String COMPANY_SERVICE_URL = "http://localhost:8083";
+    private static final String AUTH_SERVICE_URL = "http://localhost:8081/api/auth";
+    private static final String STUDENT_SERVICE_URL = "http://localhost:8082";
+    private static final String JOB_SERVICE_URL = "http://localhost:8083";
+    private static final String COMPANY_SERVICE_URL = "http://localhost:8083";
 
 
     // session validation (userId and role)
@@ -50,19 +45,13 @@ public class ApplicationService {
                     .block();
 
             if (authResponse != null) {
+                System.out.println(authResponse);
                 return authResponse;
             }
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Role not found in session");
 
         } catch (Exception e) {
-            // for Mock Testing
-            if (token.startsWith("hr-1")) return Map.of("role", "COMPANY_HR", "companyId", 1L, "userId", 1L);
-            if (token.startsWith("hr-2")) return Map.of("role", "COMPANY_HR", "companyId", 2L, "userId", 2L);
-            if (token.startsWith("po-")) return Map.of("role", "PLACEMENT_OFFICER", "userId", 999L);
-            if (token.startsWith("student-2")) return Map.of("role", "STUDENT", "userId", 2L);
-            return Map.of("role", "STUDENT", "userId", 1L);
-
-            // throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Error in authorization");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Error in authorization");
         }
     }
 
@@ -70,13 +59,15 @@ public class ApplicationService {
     public ApplicationResponse applyToJob(String token, ApplicationRequest request) {
         Map<String, Object> auth = validateSession(token);
         String role = (String) auth.get("role");
-        Long userId = ((Number) auth.get("userId")).longValue();
+        long userId = ((Number) auth.get("userId")).longValue();
 
         if (!"STUDENT".equalsIgnoreCase(role)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only Students can apply to jobs.");
         }
 
-        if (!userId.equals(request.getStudentId())) {
+        Map<String, Object> studentResponse = getStudentByUserId(userId, token);
+        Long realStudentId = ((Number) studentResponse.get("id")).longValue();
+        if (!realStudentId.equals(request.getStudentId())){
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot apply on behalf of another student.");
         }
 
@@ -91,7 +82,7 @@ public class ApplicationService {
         application.setStatus("APPLIED");
 
         Application savedApplication = applicationRepository.save(application);
-        return buildApplicationResponse(savedApplication);
+        return buildApplicationResponse(savedApplication, token);
     }
 
     @Transactional(readOnly = true)
@@ -100,9 +91,12 @@ public class ApplicationService {
         String role = (String) auth.get("role");
         Long userId = ((Number) auth.get("userId")).longValue();
 
+        Map<String, Object> studentResponse = getStudentByUserId(userId, token);
+        Long realStudentId = ((Number) studentResponse.get("id")).longValue();
+
         // Student ID Check
         if ("STUDENT".equalsIgnoreCase(role)) {
-            if (!userId.equals(studentId)) {
+            if (!realStudentId.equals(studentId)) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not authorized to view another student's applications.");
             }
         }
@@ -110,7 +104,7 @@ public class ApplicationService {
         List<Application> applications = applicationRepository.findByStudentId(studentId);
         List<ApplicationResponse> responses = new ArrayList<>();
         for (Application app : applications) {
-            responses.add(buildApplicationResponse(app));
+            responses.add(buildApplicationResponse(app, token));
         }
         return responses;
     }
@@ -120,19 +114,21 @@ public class ApplicationService {
         Map<String, Object> auth = validateSession(token);
         String role = (String) auth.get("role");
 
-        if (!"COMPANY_HR".equalsIgnoreCase(role) && !"PLACEMENT_OFFICER".equalsIgnoreCase(role)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access Denied.");
-        }
-
-        // Company ID Check
-        if ("COMPANY_HR".equalsIgnoreCase(role)) {
-            verifyJobOwner(jobId, (Number) auth.get("companyId"));
-        }
+//        if (!"COMPANY_HR".equalsIgnoreCase(role) && !"PLACEMENT_OFFICER".equalsIgnoreCase(role)) {
+//            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access Denied.");
+//        }
+//
+//        // Company ID Check
+//        if ("COMPANY_HR".equalsIgnoreCase(role)) {
+//            long userId = ((Number) auth.get("userId")).longValue();
+//            Map<String, Object> companyResponse = getCompanyById(userId, token);
+//            verifyJobOwner(jobId, (Number) companyResponse.get("id"));
+//        }
 
         List<Application> applications = applicationRepository.findByJobId(jobId);
         List<ApplicationResponse> responses = new ArrayList<>();
         for (Application app : applications) {
-            responses.add(buildApplicationResponse(app));
+            responses.add(buildApplicationResponse(app, token));
         }
         return responses;
     }
@@ -141,27 +137,33 @@ public class ApplicationService {
     public ApplicationResponse getApplicationDetails(String token, Long id) {
         Map<String, Object> auth = validateSession(token);
         String role = (String) auth.get("role");
-        Long userId = ((Number) auth.get("userId")).longValue();
+        long userId = ((Number) auth.get("userId")).longValue();
+
+        Map<String, Object> studentResponse = getStudentByUserId(userId, token);
+        Long realStudentId = ((Number) studentResponse.get("id")).longValue();
 
         Application application = applicationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Application not found"));
 
+
         if ("STUDENT".equalsIgnoreCase(role)) {
-            if (!application.getStudentId().equals(userId)) {
+            if (!application.getStudentId().equals(realStudentId)){
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot view details of another student's application.");
             }
         }
 
         if ("COMPANY_HR".equalsIgnoreCase(role)) {
-            verifyJobOwner(application.getJobId(), (Number) auth.get("companyId"));
+            Map<String, Object> companyResponse = getCompanyById(userId, token);
+            verifyJobOwner(application.getJobId(), (Number) companyResponse.get("id"));
         }
 
-        return buildApplicationResponse(application);
+        return buildApplicationResponse(application, token);
     }
     @Transactional
     public ApplicationResponse updateStatus(String token, Long id, StatusUpdateRequest request) {
         Map<String, Object> auth = validateSession(token);
         String role = (String) auth.get("role");
+        long userId = ((Number) auth.get("userId")).longValue();
 
         if (!"COMPANY_HR".equalsIgnoreCase(role) && !"PLACEMENT_OFFICER".equalsIgnoreCase(role)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access Denied.");
@@ -171,12 +173,13 @@ public class ApplicationService {
                 .orElseThrow(() -> new RuntimeException("Application not found"));
 
         if ("COMPANY_HR".equalsIgnoreCase(role)) {
-            verifyJobOwner(application.getJobId(), (Number) auth.get("companyId"));
+            Map<String, Object> companyResponse = getCompanyById(userId, token);
+            verifyJobOwner(application.getJobId(), (Number) companyResponse.get("id"));
         }
 
         application.setStatus(request.getStatus());
         Application updatedApplication = applicationRepository.save(application);
-        return buildApplicationResponse(updatedApplication);
+        return buildApplicationResponse(updatedApplication, token);
     }
 
     @Transactional(readOnly = true)
@@ -191,7 +194,7 @@ public class ApplicationService {
         List<Application> applications = applicationRepository.findAll();
         List<ApplicationResponse> responses = new ArrayList<>();
         for (Application app : applications) {
-            responses.add(buildApplicationResponse(app));
+            responses.add(buildApplicationResponse(app, token));
         }
         return responses;
     }
@@ -201,7 +204,7 @@ public class ApplicationService {
         try {
             Map<String, Object> job = webClientBuilder.build()
                     .get()
-                    .uri(JOB_SERVICE_URL + "/api/jobs/" + jobId)
+                    .uri(JOB_SERVICE_URL + "/api/jobs/"+jobId)
                     .retrieve()
                     .bodyToMono(Map.class)
                     .block();
@@ -220,32 +223,37 @@ public class ApplicationService {
         }
     }
 
-    private ApplicationResponse buildApplicationResponse(Application application) {
+    private ApplicationResponse buildApplicationResponse(Application application, String token) {
+//        System.out.println(application.getStudentId());
         ApplicationResponse response = new ApplicationResponse();
         response.setId(application.getId());
         response.setStudentId(application.getStudentId());
         response.setJobId(application.getJobId());
         response.setAppliedDate(application.getAppliedDate());
         response.setStatus(application.getStatus());
-
+//        System.out.println(application.getStudentId());
         try {
             Map<String, Object> student = webClientBuilder.build()
                     .get()
-                    .uri(STUDENT_SERVICE_URL + "/api/students/" + application.getStudentId())
+                    .uri(STUDENT_SERVICE_URL +"/api/students/" + application.getStudentId())
+                    .header("SESSION-TOKEN", token)
                     .retrieve()
                     .bodyToMono(Map.class)
                     .block();
-
+            System.out.println(student);
             if (student != null) {
                 response.setStudentName((String) student.get("name"));
-                response.setStudentDepartment((String) student.get("department"));
-                Object cgpaObj = student.get("cgpa");
-                if (cgpaObj != null) response.setStudentCgpa(((Number) cgpaObj).doubleValue());
+                response.setStudentDepartment((String) student.get("dept"));
+                if (student.get("cgpa") != null) {
+                    response.setStudentCgpa(((Number) student.get("cgpa")).doubleValue());
+                }
                 Object skillsObj = student.get("skills");
-                if (skillsObj != null) response.setStudentSkills(skillsObj.toString());
+                if (skillsObj instanceof List) {
+                    response.setStudentSkills(String.join(",", (List<String>) skillsObj));
+                }
                 Object resumePath = student.get("resumePath");
                 if (resumePath != null && !resumePath.toString().isEmpty()) {
-                    response.setResumeUrl(STUDENT_SERVICE_URL + "/api/students/" + application.getStudentId() + "/resume");
+                    response.setResumeUrl(STUDENT_SERVICE_URL +"/api/students/" + application.getStudentId() + "/resume");
                 }
             }
         } catch (Exception e) {
@@ -256,6 +264,7 @@ public class ApplicationService {
             Map<String, Object> job = webClientBuilder.build()
                     .get()
                     .uri(JOB_SERVICE_URL+"/api/jobs/"+application.getJobId())
+                    .header("SESSION-TOKEN", token)
                     .retrieve()
                     .bodyToMono(Map.class)
                     .block();
@@ -263,7 +272,7 @@ public class ApplicationService {
             if (job != null) {
                 response.setJobTitle((String) job.get("title"));
                 response.setJobLocation((String) job.get("location"));
-                Object packageObj = job.get("package");
+                Object packageObj = job.get("packageLpa");
                 if (packageObj != null)
                     response.setJobPackage(((Number) packageObj).doubleValue());
 
@@ -285,7 +294,27 @@ public class ApplicationService {
             response.setJobLocation("N/A");
             response.setJobPackage(0.0);
         }
-
         return response;
+
+    }
+
+    private Map<String, Object> getStudentByUserId(Long userId, String token) {
+        return webClientBuilder.build()
+                .get()
+                .uri(STUDENT_SERVICE_URL + "/api/students/userId/" + userId)
+                .header("SESSION-TOKEN", token)
+                .retrieve()
+                .bodyToMono(Map.class)
+                .block();
+    }
+
+    private Map<String, Object> getCompanyById(Long userId, String token) {
+        return webClientBuilder.build()
+                .get()
+                .uri(COMPANY_SERVICE_URL + "/api/companies/userId/" + userId)
+                .header("SESSION-TOKEN", token)
+                .retrieve()
+                .bodyToMono(Map.class)
+                .block();
     }
 }

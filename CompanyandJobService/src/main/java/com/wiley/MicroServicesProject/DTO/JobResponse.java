@@ -17,4 +17,6 @@ public class JobResponse {
     private LocalDate deadline;
     private Long companyId;
     private String companyName;
+    
+    private String description;
 }

@@ -1,30 +1,37 @@
 package com.placement.reporting.service;
 
-import com.placement.reporting.client.ApplicationClient;
-import com.placement.reporting.client.CompanyClient;
-import com.placement.reporting.client.StudentClient;
 import com.placement.reporting.dto.PlacementReportDto;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import java.util.List;
+import java.util.Map;
 
 @Service
+@SuppressWarnings("unchecked")
 public class PlacementReportService {
 
-    private final StudentClient studentClient;
-    private final ApplicationClient applicationClient;
-    private final CompanyClient companyClient;
+    private final WebClient webClient;
 
-    public PlacementReportService(StudentClient studentClient,
-                                  ApplicationClient applicationClient,
-                                  CompanyClient companyClient) {
-        this.studentClient = studentClient;
-        this.applicationClient = applicationClient;
-        this.companyClient = companyClient;
+    public PlacementReportService(WebClient webClient) {
+        this.webClient = webClient;
     }
 
     public PlacementReportDto getPlacementReport() {
 
-        var students = studentClient.getAllStudents();
-        var jobs = companyClient.getAllJobs();
+        // 🔹 Get all students (Team 2)
+        List<Map<String, Object>> students = webClient.get()
+                .uri("http://localhost:8082/api/students/list")
+                .retrieve()
+                .bodyToMono(List.class)
+                .block();
+
+        // 🔹 Get all jobs (Team 3)
+        List<Map<String, Object>> jobs = webClient.get()
+                .uri("http://localhost:8083/api/jobs/list")
+                .retrieve()
+                .bodyToMono(List.class)
+                .block();
 
         long totalStudents = students.size();
 
@@ -32,14 +39,23 @@ public class PlacementReportService {
         double totalPackage = 0.0;
         double highestPackage = 0.0;
 
-        for (var job : jobs) {
+        // 🔹 For each job → get applications
+        for (Map<String, Object> job : jobs) {
 
-            var applications = applicationClient.getApplicationsByJob(job.getId());
+            Long jobId = Long.valueOf(job.get("id").toString());
+            double pkg = Double.parseDouble(job.get("package").toString());
 
-            for (var app : applications) {
-                if ("SELECTED".equalsIgnoreCase(app.getStatus())) {
+            List<Map<String, Object>> applications = webClient.get()
+                    .uri("http://localhost:8084/api/applications/job/{id}", jobId)
+                    .retrieve()
+                    .bodyToMono(List.class)
+                    .block();
+
+            for (Map<String, Object> app : applications) {
+                if ("SELECTED".equalsIgnoreCase(
+                        String.valueOf(app.get("status"))
+                )) {
                     placedStudents++;
-                    double pkg = job.getPackageAmount();
                     totalPackage += pkg;
                     highestPackage = Math.max(highestPackage, pkg);
                 }
@@ -54,7 +70,14 @@ public class PlacementReportService {
                 ? (placedStudents * 100.0) / totalStudents
                 : 0.0;
 
-        long companiesVisited = companyClient.getAllCompanies().size();
+        // 🔹 Get companies visited (Team 3)
+        List<Map<String, Object>> companies = webClient.get()
+                .uri("http://localhost:8083/api/companies/list")
+                .retrieve()
+                .bodyToMono(List.class)
+                .block();
+
+        long companiesVisited = companies.size();
 
         return new PlacementReportDto(
                 totalStudents,

@@ -1,15 +1,16 @@
 package com.placement.reporting.auth;
 
-
-import com.placement.reporting.auth.AuthUserResponse;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 @Service
 public class AuthValidationService {
 
-    // Change ONLY if auth service URL changes
+    // Auth Service endpoint
     private static final String AUTH_CURRENT_USER_URL =
             "http://localhost:8081/api/auth/current-user";
 
@@ -20,26 +21,35 @@ public class AuthValidationService {
 
     public void validatePlacementOfficer(String sessionToken) {
 
-        if (sessionToken == null || sessionToken.isBlank()) {
-            throw new RuntimeException("Missing session token");
+        if (sessionToken == null || sessionToken.trim().isEmpty()) {
+            throw new RuntimeException("Session token missing");
         }
 
         HttpHeaders headers = new HttpHeaders();
         headers.set(SESSION_HEADER, sessionToken);
 
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
+        HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
 
-        ResponseEntity<AuthUserResponse> response =
-                restTemplate.exchange(
-                        AUTH_CURRENT_USER_URL,
-                        HttpMethod.GET,
-                        entity,
-                        AuthUserResponse.class
-                );
+        ResponseEntity<AuthUserResponse> response;
 
-        if (response.getBody() == null ||
-                response.getBody().getRole() == null ||
-                !REQUIRED_ROLE.equals(response.getBody().getRole())) {
+        try {
+            response = restTemplate.exchange(
+                    AUTH_CURRENT_USER_URL,
+                    HttpMethod.GET,
+                    requestEntity,
+                    AuthUserResponse.class
+            );
+        } catch (Exception ex) {
+            throw new RuntimeException("Invalid session");
+        }
+
+        AuthUserResponse user = response.getBody();
+
+        if (user == null || user.getRole() == null) {
+            throw new RuntimeException("Invalid auth response");
+        }
+
+        if (!REQUIRED_ROLE.equals(user.getRole())) {
             throw new RuntimeException("Access denied");
         }
     }
