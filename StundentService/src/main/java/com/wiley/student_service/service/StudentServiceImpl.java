@@ -78,7 +78,7 @@ public class StudentServiceImpl implements StudentService {
         if(!user.getIsActive()) {
             throw new RuntimeException("Inactive user");
         }
-        if (!user.getRole().equals("COMPANY_HR") && !user.getRole().equals("PLACEMENT_OFFICER" )) {
+        if (!user.getRole().equals("COMPANY_HR") && !user.getRole().equals("PLACEMENT_OFFICER") && !user.getRole().equals("STUDENT")) {
             throw new RuntimeException("Unauthorized access");
         }
         return mapToResponse(student);
