@@ -7,20 +7,17 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/reports")
+@CrossOrigin
 public class PoDashboardController {
 
     private final PoDashboardService poDashboardService;
 
-    public PoDashboardController(
-            PoDashboardService poDashboardService) {
+    public PoDashboardController(PoDashboardService poDashboardService) {
         this.poDashboardService = poDashboardService;
     }
 
-    // Placement Officer dashboard summary
     @GetMapping("/po-dashboard")
-    public ResponseEntity<PoDashboardDto> getPoDashboard() {
-        PoDashboardDto dashboard =
-                poDashboardService.getDashboardData();
-        return ResponseEntity.ok(dashboard);
+    public ResponseEntity<PoDashboardDto> getPoDashboard(@RequestHeader("SESSION-TOKEN") String token) {
+        return ResponseEntity.ok(poDashboardService.getDashboardData(token));
     }
 }

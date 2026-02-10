@@ -26,9 +26,14 @@ public class StudentController {
         return new ResponseEntity<>(studentService.createStudent(dto), HttpStatus.CREATED);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/me")
     public ResponseEntity<StudentResponseDTO> getStudent(@RequestHeader ("Session-Token")String token) {
         return ResponseEntity.ok(studentService.getStudentById(token));
+    }
+
+    @GetMapping("/{studentId}")
+    public ResponseEntity<StudentResponseDTO> getStudentByIdForHrandPo(@PathVariable("studentId") Long studentId, @RequestHeader ("Session-Token")String token) {
+        return ResponseEntity.ok(studentService.getStudentByIdForHrandPo(studentId,token));
     }
 
     @GetMapping("/userId/{user_id}")

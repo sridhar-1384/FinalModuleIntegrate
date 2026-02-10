@@ -167,7 +167,7 @@
             // 1. Load student basic info
             const studentRes = await fetch(`http://localhost:8082/api/students/${studentId}`, {
                 headers: {
-                    "X-SESSION-TOKEN": token
+                    "SESSION-TOKEN": token
                 }
             });
 
@@ -177,12 +177,12 @@
 
             document.getElementById("studentId").innerText = student.id ?? "-";
             document.getElementById("studentName").innerText = student.name ?? "Student";
-            document.getElementById("studentDept").innerText = student.department ?? "-";
+            document.getElementById("studentDept").innerText = student.dept ?? "-";
 
             // 2. Load report data
             const reportRes = await fetch(`http://localhost:8085/api/reports/student/${studentId}`, {
                 headers: {
-                    "X-SESSION-TOKEN": token
+                    "SESSION-TOKEN": token
                 }
             });
 

@@ -1,3 +1,8 @@
+// -------- GLOBAL VARIABLES --------
+let resumePath = null;
+const addedSkillIds = new Set();
+let currentStudentId = null;
+
 (function() {
     // Check immediately on script load
     if (!sessionStorage.getItem("sessionToken")) {
@@ -14,9 +19,7 @@
         }
     });
 })();
-// -------- GLOBAL VARIABLES --------
-let resumePath = null;
-const addedSkillIds = new Set();
+
 
 // -------- UTILITY: GET SESSION TOKEN --------
 function getSessionToken() {
@@ -65,6 +68,11 @@ async function loadStudentProfile() {
 
         const data = await res.json();
         console.log("Student data received:", data);
+
+        console.log("typeof currentStudentId:", typeof currentStudentId);
+
+        currentStudentId=data.id;
+        console.log("Current Student ID set to:", currentStudentId);
 
         // Update UI
         document.getElementById("name").innerText = data.name || "N/A";
@@ -381,7 +389,11 @@ function logout() {
 
 // -------- NAVIGATION --------
 function goPage(page) {
-    window.location.href = page;
+    if (page === 'student-applications.html' && currentStudentId) {
+            window.location.href = `${page}?studentid=${currentStudentId}`;
+        } else {
+            window.location.href = page;
+        }
 }
 
 // -------- INITIALIZE ON PAGE LOAD --------
