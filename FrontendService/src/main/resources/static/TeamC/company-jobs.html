@@ -54,7 +54,7 @@
 <!-- NAVBAR -->
 <nav class="navbar navbar-dark bg-dark px-4">
     <span class="navbar-brand fw-semibold">Mthree Placement</span>
-    <button class="btn btn-outline-light btn-sm">Logout</button>
+    <button id="logoutBtn" class="btn btn-outline-light btn-sm">Logout</button>
 </nav>
 
 <div class="container-fluid">
@@ -64,7 +64,6 @@
         <div class="col-md-2 sidebar p-3">
             <a href="company-dashboard.html"><i class="bi bi-grid"></i> Dashboard</a>
             <a class="active" href="#"><i class="bi bi-briefcase"></i> My Jobs</a>
-            <a href="company-applications.html"><i class="bi bi-people"></i> Applications</a>
         </div>
 
         <!-- MAIN -->
@@ -85,89 +84,96 @@
 </div>
 
 <script>
-    const COMPANY_ID = 2;
 
-    async function loadJobs() {
-        try {
+    // LOGOUT
 
+   document.getElementById("logoutBtn").onclick = () => {
+       sessionStorage.removeItem("sessionToken");
+       window.location.href = "/TeamA/login.html";
+   };
+   const COMPANY_ID = 2;
 
-        // STEP 1 → current user
-        const userRes = await fetch("http://localhost:8081/api/auth/current-user", {
-            headers: {
-                "SESSION-TOKEN": token
-            }
-        });
-
-
-        const user = await userRes.json();
-
-        const userId = user.userId;
+   async function loadJobs() {
+       try {
 
 
-        // STEP 2 → company details
-        const companyRes = await fetch(
-            `http://localhost:8083/api/companies/userId/${userId}`,
-            {
-                headers: {
-                    "SESSION-TOKEN": token
-                }
-            }
-        );
-
-        console.log("Company API status =", companyRes.status);
-
-        const company = await companyRes.json();
-
-        console.log("Pavan company id",company.id);
-
-            const res = await fetch("http://localhost:8083/api/jobs/list");
-            const jobs = await res.json();
-
-            console.log("Pavan Jobs",jobs);
-
-            const container = document.getElementById("jobsContainer");
-            container.innerHTML = "";
-
-            const companyJobs = jobs.filter(j => j.companyId === company.id);
-
-            console.log("Pavan companyJobs",companyJobs);
+       // STEP 1 → current user
+       const userRes = await fetch("http://localhost:8081/api/auth/current-user", {
+           headers: {
+               "SESSION-TOKEN": token
+           }
+       });
 
 
-            if (companyJobs.length === 0) {
-                container.innerHTML = "<p>No jobs posted yet.</p>";
-                return;
-            }
+       const user = await userRes.json();
 
-            companyJobs.forEach(job => {
-                container.innerHTML += `
-                <div class="job-card">
-                  <h5>${job.title}</h5>
-                  <p class="text-muted mb-1">
-                    <i class="bi bi-geo-alt"></i> ${job.location} |
-                    <i class="bi bi-currency-rupee"></i> ${job.packageLpa} LPA
-                  </p>
+       const userId = user.userId;
 
-                  <div class="d-flex justify-content-between mt-3">
-                    <div>
-                      <strong>Min CGPA:</strong> ${job.minCgpa}
-                    </div>
-                    <div>
-                      <strong>Deadline:</strong> ${job.deadline}
-                    </div>
-                    <a href="company-applications.html" class="btn btn-outline-primary btn-sm">
-                      View Applicants
-                    </a>
-                  </div>
-                </div>
-                `;
-            });
 
-        } catch (err) {
-            console.error("Error loading jobs", err);
-        }
-    }
+       // STEP 2 → company details
+       const companyRes = await fetch(
+           `http://localhost:8083/api/companies/userId/${userId}`,
+           {
+               headers: {
+                   "SESSION-TOKEN": token
+               }
+           }
+       );
 
-    window.onload = loadJobs;
+       console.log("Company API status =", companyRes.status);
+
+       const company = await companyRes.json();
+
+       console.log("Pavan company id",company.id);
+
+           const res = await fetch("http://localhost:8083/api/jobs/list");
+           const jobs = await res.json();
+
+           console.log("Pavan Jobs",jobs);
+
+           const container = document.getElementById("jobsContainer");
+           container.innerHTML = "";
+
+           const companyJobs = jobs.filter(j => j.companyId === company.id);
+
+           console.log("Pavan companyJobs",companyJobs);
+
+
+           if (companyJobs.length === 0) {
+               container.innerHTML = "<p>No jobs posted yet.</p>";
+               return;
+           }
+
+           companyJobs.forEach(job => {
+               container.innerHTML += `
+               <div class="job-card">
+                 <h5>${job.title}</h5>
+                 <p class="text-muted mb-1">
+                   <i class="bi bi-geo-alt"></i> ${job.location} |
+                   <i class="bi bi-currency-rupee"></i> ${job.packageLpa} LPA
+                 </p>
+
+                 <div class="d-flex justify-content-between mt-3">
+                   <div>
+                     <strong>Min CGPA:</strong> ${job.minCgpa}
+                   </div>
+                   <div>
+                     <strong>Deadline:</strong> ${job.deadline}
+                   </div>
+                   <a href="company-applications.html" class="btn btn-outline-primary btn-sm">
+                     View Applicants
+                   </a>
+                 </div>
+               </div>
+               `;
+           });
+
+       } catch (err) {
+           console.error("Error loading jobs", err);
+       }
+   }
+
+   window.onload = loadJobs;
 </script>
 
 </body>
