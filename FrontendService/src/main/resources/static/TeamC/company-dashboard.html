@@ -88,14 +88,6 @@
                     </div>
                 </div>
 
-                <div class="col-md-3">
-                    <div class="glass-card p-4 text-center">
-                        <i class="bi bi-people fs-2 text-success"></i>
-                        <h6 class="mt-2 text-muted">Applications</h6>
-                        <h2 class="fw-bold" id="applicationsCount">0</h2>
-                    </div>
-                </div>
-
             </div>
 
             <!-- QUICK ACTIONS -->
@@ -171,8 +163,6 @@
             const jobs = await res.json();
             document.getElementById("postedJobsCount").innerText = jobs.length;
 
-            // Applications count (future service)
-            document.getElementById("applicationsCount").innerText = 0;
 
 
         } catch (e) {
