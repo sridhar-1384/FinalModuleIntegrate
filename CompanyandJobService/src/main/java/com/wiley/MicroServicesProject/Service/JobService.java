@@ -94,6 +94,7 @@ public class JobService {
             jr.setMinCgpa(job.getMinCgpa());
             jr.setDeadline(job.getDeadline());
             jr.setCompanyId(job.getCompanyId());
+            jr.setDescription(job.getDescription());
 
             Company company = null;
             if (job.getCompanyId() != null) {
@@ -125,6 +126,7 @@ public class JobService {
         jr.setMinCgpa(job.getMinCgpa());
         jr.setDeadline(job.getDeadline());
         jr.setCompanyId(job.getCompanyId());
+        jr.setDescription(job.getDescription());
         jr.setCompanyName(company != null ? company.getName() : "Unknown");
 
         return jr;
