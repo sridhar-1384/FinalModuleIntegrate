@@ -7,20 +7,17 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/reports")
+@CrossOrigin
 public class PlacementReportController {
 
     private final PlacementReportService placementReportService;
 
-    public PlacementReportController(
-            PlacementReportService placementReportService) {
+    public PlacementReportController(PlacementReportService placementReportService) {
         this.placementReportService = placementReportService;
     }
 
-    // Overall placement statistics
     @GetMapping("/overview")
-    public ResponseEntity<PlacementReportDto> getPlacementReport() {
-        PlacementReportDto report =
-                placementReportService.getPlacementReport();
-        return ResponseEntity.ok(report);
+    public ResponseEntity<PlacementReportDto> getPlacementReport(@RequestHeader("SESSION-TOKEN") String token) {
+        return ResponseEntity.ok(placementReportService.getPlacementReport(token));
     }
 }
