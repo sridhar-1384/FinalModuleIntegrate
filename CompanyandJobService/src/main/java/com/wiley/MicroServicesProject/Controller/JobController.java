@@ -17,7 +17,7 @@ public class JobController {
     private JobService jobService;
 
     // Student / PO: list all jobs with company name
-    @GetMapping("/list")
+    @GetMapping("/list")    //base url
     public List<JobResponse> getAllJobs() {
         return jobService.getAllJobsWithCompany();
     }

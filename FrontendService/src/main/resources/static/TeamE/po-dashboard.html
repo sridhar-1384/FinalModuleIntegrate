@@ -138,9 +138,11 @@
             return;
         }
 
+        console.log("Pavan token:",token);
+
         fetch("http://localhost:8085/api/reports/po-dashboard", {
             headers: {
-                "X-SESSION-TOKEN": token
+                "SESSION-TOKEN": token
             }
         })
             .then(res => {
@@ -148,6 +150,7 @@
                 return res.json();
             })
             .then(data => {
+                console.log("Pavan data getting :",data);
                 document.getElementById("totalStudents").innerText = data.totalStudents;
                 document.getElementById("totalJobs").innerText = data.totalJobs;
                 document.getElementById("totalApplications").innerText = data.totalApplications;
