@@ -11,6 +11,6 @@ public class JobDto {
     private Long id;
     private Long companyId;
     private String title;
-    private double packageAmount;
+    private double packageLpa;
 
 }
