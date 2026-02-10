@@ -168,7 +168,7 @@
 
         fetch("http://localhost:8085/api/reports/company-wise", {
             headers: {
-                "X-SESSION-TOKEN": token
+                "SESSION-TOKEN": token
             }
         })
             .then(res => {
@@ -195,7 +195,7 @@
 
         fetch("http://localhost:8085/api/reports/export", {
             headers: {
-                "X-SESSION-TOKEN": token
+                "SESSION-TOKEN": token
             }
         })
             .then(res => {
