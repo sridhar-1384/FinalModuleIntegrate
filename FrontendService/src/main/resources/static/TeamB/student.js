@@ -449,7 +449,9 @@ function logout() {
 
 // -------- NAVIGATION --------
 function goPage(page) {
-    if (page === 'student-applications.html' && currentStudentId) {
+
+    if (page === '/TeamD/student-applications.html' && currentStudentId) {
+
             window.location.href = `${page}?studentId=${currentStudentId}`;
         } else {
             window.location.href = page;

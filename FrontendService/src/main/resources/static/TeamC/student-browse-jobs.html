@@ -50,6 +50,11 @@
             <i class="fas fa-bell"></i>
             <span>Notifications</span>
         </a>
+
+        <a class="sidebar-link" onclick="goPage('/TeamB/student-applications.html')">
+            <i class="fas fa-folder-open"></i>
+            <span>My Applications</span>
+        </a>
     </aside>
 
     <!-- MAIN -->
@@ -114,6 +119,7 @@
     let allJobs = []; // store original jobs
     let token=null;
     let student=null;
+    let currentStudentid=null;
 
     function goPage(page) {
         window.location.href = page;
@@ -161,7 +167,7 @@
         console.log("Company API status =", studentRes.status);
 
          student = await studentRes.json();
-
+         currentStudentId=student.id;
          document.getElementById("navUser").innerText = student.name || "User";
 
 
@@ -367,6 +373,13 @@
        });
 
     }
+    function goPage(page) {
+    if (page === '/TeamB/student-applications.html' && currentStudentId) {
+            window.location.href = `${page}?studentId=${currentStudentId}`;
+        } else {
+            window.location.href = page;
+        }
+}
 
 </script>
 

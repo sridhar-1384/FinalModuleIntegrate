@@ -2,171 +2,267 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>PO - All Jobs</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Student Jobs</title>
 
     <!-- Bootstrap -->
-    <link
-            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-            rel="stylesheet"
-    />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet"/>
+
+    <!-- Reuse the same dashboard CSS as PO -->
+    <link rel="stylesheet" href="css/admin-dashboard.css">
+
+
 
     <style>
-        body {
-            background: #f4f6f9;
-        }
-
-        /* Topbar */
-        .topbar {
-            background: #1f2937;
-            color: #fff;
-            padding: 12px 20px;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            height: 100vh;
-            background: #0f172a;
-            color: #fff;
-        }
-
-        .sidebar a {
-            color: #cbd5e1;
-            text-decoration: none;
-            padding: 12px 20px;
-            display: block;
-            border-radius: 6px;
-            margin-bottom: 5px;
-        }
-
-        .sidebar a:hover,
-        .sidebar .active {
-            background: #1e293b;
-            color: #fff;
-        }
-
-        /* Job Card */
+        /* Extra styling only for job cards (keeps sidebar/navbar consistent with PO) */
         .job-card {
-            background: #fff;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
-            margin-bottom: 15px;
+          border-radius: 16px;
+          border: 1px solid rgba(0,0,0,0.08);
+          background: #fff;
+          box-shadow: 0 6px 18px rgba(0,0,0,0.06);
         }
-
-        .job-title {
-            font-weight: 600;
-            font-size: 18px;
+        .job-meta i { width: 18px; }
+        .badge-salary {
+          background: #198754;
+          color: #fff;
+          font-weight: 600;
+          border-radius: 999px;
+          padding: 8px 14px;
+          display: inline-block;
         }
-
-        .badge-status {
-            font-size: 13px;
-            padding: 6px 10px;
-        }
+        .filters .form-control { border-radius: 10px; }
     </style>
 </head>
+
 <body>
-<!-- Top Bar -->
-<div class="topbar d-flex justify-content-between align-items-center">
-    <h5 class="mb-0">Placement Management System</h5>
-    <button class="btn btn-outline-light btn-sm">Logout</button>
-</div>
+
+<!-- Navbar -->
+<nav class="navbar navbar-dark bg-dark px-4">
+    <span class="navbar-brand fw-semibold">Placement Management System</span>
+    <button class="btn btn-outline-light btn-sm" id="login">Login</button>
+    <script>
+        const sec = document.getElementById('login');
+        let token = sessionStorage.getItem('sessionToken');
+        sec.innerHTML = token ? 'Logout' : 'Login';
+        sec.addEventListener("click", () => {
+            if (token) sessionStorage.clear();
+            window.location.href = "/TeamA/login.html";
+        });
+    </script>
+</nav>
 
 <div class="container-fluid">
     <div class="row">
-        <!-- Sidebar -->
+
+        <!-- Sidebar (match PO style) -->
         <div class="col-md-2 sidebar p-3">
-            <h6 class="text-uppercase text-secondary">Menu</h6>
-            <a href="#">Dashboard</a>
-            <a href="#" class="active">All Jobs</a>
-            <a href="#">Companies</a>
-            <a href="#">Students</a>
+            <h6 class="text-uppercase text-secondary mb-3">Menu</h6>
+
+            <a href="/TeamE/po-dashboard.html">
+                <i class="bi bi-grid me-2"></i>Dashboard
+            </a>
+
+            <a href="/TeamE/placement-report.html">
+                <i class="bi bi-clipboard-data me-2"></i>Placement Report
+            </a>
+
+            <a href="/TeamE/department-report.html">
+                <i class="bi bi-diagram-3 me-2"></i>Department Report
+            </a>
+
+            <a href="/TeamE/student-stats.html">
+                <i class="bi bi-bar-chart me-2"></i>Student Statistics
+            </a>
+
+            <a href="/TeamE/company-report.html">
+                <i class="bi bi-building me-2"></i>Company Report
+            </a>
+
+            <a href="/TeamE/student-list.html">
+                <i class="bi bi-people me-2"></i>Students
+            </a>
+
+
+            <a class="active" href="#">
+                <i class="bi bi-briefcase me-2"></i>All Jobs
+            </a>
+
+            <a href="/TeamD/po-applications.html">
+                <i class="bi bi-file-earmark-text me-2"></i>Applications
+            </a>
+            <!--            <a href="/TeamB/po-student-details.html">-->
+            <!--                <i class="bi bi-person-badge me-2"></i>Student Details-->
+            <!--            </a>-->
+
+
         </div>
 
         <!-- Main Content -->
         <div class="col-md-10 p-4">
-            <h4 class="mb-4">All Jobs</h4>
 
-            <!-- Job 1 -->
-            <div
-                    class="job-card d-flex justify-content-between align-items-center"
-            >
-                <div>
-                    <div class="job-title">Software Engineer</div>
-                    <small class="text-muted">Company: TCS</small>
-                </div>
+            <div class="report-title-box mb-4">
+                <h4 class="fw-semibold mb-0">Available Jobs</h4>
+                <div class="">Explore and apply to opportunities</div>
+            </div>
 
-                <div><strong>CTC:</strong> 7 LPA</div>
-
-                <div><strong>Eligibility:</strong> CGPA ≥ 7.0</div>
-
-                <div>
-                            <span class="badge bg-success badge-status"
-                            >Open</span
-                            >
-                </div>
-
-                <div>
-                    <button class="btn btn-outline-primary btn-sm">
-                        View
-                    </button>
+            <!-- Filters / Search row (PO style spacing) -->
+            <div class="card p-3 mb-4 filters">
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-5">
+                        <input id="searchText" class="form-control" placeholder="Search job title or company">
+                    </div>
+                    <div class="col-md-2">
+                        <input id="minLpa" class="form-control" placeholder="Min LPA" type="number" step="0.1">
+                    </div>
+                    <div class="col-md-2">
+                        <input id="maxLpa" class="form-control" placeholder="Max LPA" type="number" step="0.1">
+                    </div>
+                    <div class="col-md-3 d-flex gap-2">
+                        <button class="btn btn-dark w-100" id="btnSearch">
+                            <i class="bi bi-search me-1"></i>Search
+                        </button>
+                        <button class="btn btn-outline-secondary w-100" id="btnReset">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Job 2 -->
-            <div
-                    class="job-card d-flex justify-content-between align-items-center"
-            >
-                <div>
-                    <div class="job-title">Data Analyst</div>
-                    <small class="text-muted">Company: Infosys</small>
-                </div>
+            <!-- Jobs container -->
+            <div id="jobContainer" class="d-flex flex-column gap-3"></div>
 
-                <div><strong>CTC:</strong> 6 LPA</div>
-
-                <div><strong>Eligibility:</strong> CGPA ≥ 6.5</div>
-
-                <div>
-                            <span
-                                    class="badge bg-warning text-dark badge-status"
-                            >Closed</span
-                            >
-                </div>
-
-                <div>
-                    <button class="btn btn-outline-secondary btn-sm">
-                        View
-                    </button>
-                </div>
-            </div>
-
-            <!-- Job 3 -->
-            <div
-                    class="job-card d-flex justify-content-between align-items-center"
-            >
-                <div>
-                    <div class="job-title">Web Developer</div>
-                    <small class="text-muted">Company: Wipro</small>
-                </div>
-
-                <div><strong>CTC:</strong> 5 LPA</div>
-
-                <div><strong>Eligibility:</strong> CGPA ≥ 6.0</div>
-
-                <div>
-                            <span class="badge bg-success badge-status"
-                            >Open</span
-                            >
-                </div>
-
-                <div>
-                    <button class="btn btn-outline-primary btn-sm">
-                        View
-                    </button>
-                </div>
-            </div>
         </div>
     </div>
 </div>
+
+<script>
+    let ALL_JOBS = [];
+
+    function renderJobs(jobs) {
+      const container = document.getElementById("jobContainer");
+      container.innerHTML = "";
+
+      if (!jobs || jobs.length === 0) {
+        container.innerHTML = `
+          <div class="alert alert-info">
+            <i class="bi bi-info-circle me-1"></i>
+            No jobs found for the selected filters.
+          </div>
+        `;
+        return;
+      }
+
+      jobs.forEach(job => {
+        container.innerHTML += `
+          <div class="job-card p-4">
+            <div class="d-flex justify-content-between flex-wrap gap-3">
+              <div class="flex-grow-1">
+
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                  <h5 class="fw-bold mb-0">
+                    <i class="bi bi-building me-2"></i>${job.companyName}
+                  </h5>
+                  <span class="badge-salary">
+                    <i class="bi bi-currency-rupee"></i> ${job.packageLpa} LPA
+                  </span>
+                </div>
+
+                <div class="mt-3 job-meta text-muted small d-flex flex-column gap-2">
+                  <div>
+                    <i class="bi bi-person-badge"></i>
+                    <span class="ms-1"><b>Role:</b> ${job.title}</span>
+                  </div>
+
+                  <div>
+                    <i class="bi bi-geo-alt"></i>
+                    <span class="ms-1"><b>Location:</b> ${job.location}</span>
+                  </div>
+
+                  <div>
+                    <i class="bi bi-calendar-event"></i>
+                    <span class="ms-1"><b>Deadline:</b> ${job.deadline}</span>
+                  </div>
+
+                  <div>
+                    <i class="bi bi-bar-chart"></i>
+                    <span class="ms-1"><b>Min CGPA:</b> ${job.minCgpa}</span>
+                  </div>
+                   <div>
+                    <i class="bi bi-geo-alt"></i>
+                    <span class="ms-1"><b>Description:</b> ${job.description}</span>
+                  </div>
+                </div>
+
+
+
+
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function filterJobs() {
+      const q = (document.getElementById("searchText").value || "").toLowerCase().trim();
+      const min = parseFloat(document.getElementById("minLpa").value);
+      const max = parseFloat(document.getElementById("maxLpa").value);
+
+      const filtered = ALL_JOBS.filter(job => {
+        const text = `${job.companyName || ""} ${job.title || ""}`.toLowerCase();
+        const pkg = parseFloat(job.packageLpa);
+
+        const matchText = !q || text.includes(q);
+        const matchMin = isNaN(min) || (!isNaN(pkg) && pkg >= min);
+        const matchMax = isNaN(max) || (!isNaN(pkg) && pkg <= max);
+
+        return matchText && matchMin && matchMax;
+      });
+
+      renderJobs(filtered);
+    }
+
+    document.getElementById("btnSearch").addEventListener("click", filterJobs);
+    document.getElementById("btnReset").addEventListener("click", () => {
+      document.getElementById("searchText").value = "";
+      document.getElementById("minLpa").value = "";
+      document.getElementById("maxLpa").value = "";
+      renderJobs(ALL_JOBS);
+    });
+
+    function viewDetails(jobId) {
+      // If you have a Team page for job details, update this route
+      // Example:
+      // window.location.href = `/TeamC/job-details.html?jobId=${jobId}`;
+      alert("Hook this to your Job Details page. jobId = " + jobId);
+    }
+
+    function applyNow(jobId) {
+      // Hook this to your Apply API / apply page.
+      // Example:
+      // window.location.href = `/TeamD/apply.html?jobId=${jobId}`;
+      alert("Hook this to your Apply flow. jobId = " + jobId);
+    }
+
+    // Load jobs
+    fetch("http://localhost:8083/api/jobs/list")
+      .then(res => res.json())
+      .then(jobs => {
+        ALL_JOBS = Array.isArray(jobs) ? jobs : [];
+        renderJobs(ALL_JOBS);
+      })
+      .catch(err => {
+        console.error("Failed to load jobs", err);
+        document.getElementById("jobContainer").innerHTML = `
+          <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            Failed to load jobs. Check Job Service is running on port 8083.
+          </div>
+        `;
+      });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

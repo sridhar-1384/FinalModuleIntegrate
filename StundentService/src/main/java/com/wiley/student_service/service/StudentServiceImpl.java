@@ -13,7 +13,7 @@ import com.wiley.student_service.repository.StudentSkillRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.net.MalformedURLException;
 import java.util.List;
 
 @Service
@@ -54,39 +55,33 @@ public class StudentServiceImpl implements StudentService {
     public StudentResponseDTO getStudentById(String token) {
         AuthUserDto user = authClient.validateSession(token);
 
-        Student student = studentRepository.findByUserId(user.getUserId())
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+                Student student = studentRepository.findByUserId(user.getUserId())
+                    .orElseThrow(() -> new RuntimeException("Student not found"));
 
         if(!user.getIsActive()) {
             throw new RuntimeException("Inactive user");
         }
         if (!student.getUserId().equals(user.getUserId())
-                && !user.getRole().equals("ADMIN")) {
+                && !user.getRole().equals("PLACEMENT_OFFICER")  && !user.getRole().equals("ADMIN")) {
             throw new RuntimeException("Unauthorized access");
         }
         return mapToResponse(student);
     }
 
     @Override
-    public StudentResponseDTO getStudentByUserId(String token, Long userId) {
-
+    public StudentResponseDTO getStudentByIdForHrandPo(Long studentId,String token) {
         AuthUserDto user = authClient.validateSession(token);
 
-        if (!user.getIsActive())
-            throw new RuntimeException("Inactive user");
-
-        if (!user.getUserId().equals(userId) && !user.getRole().equals("ADMIN"))
-            throw new RuntimeException("Unauthorized access");
-
-        Student student = studentRepository.findByUserId(userId)
+        Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
+        if(!user.getIsActive()) {
+            throw new RuntimeException("Inactive user");
+        }
+        if (!user.getRole().equals("COMPANY_HR") && !user.getRole().equals("PLACEMENT_OFFICER") && !user.getRole().equals("STUDENT")) {
+            throw new RuntimeException("Unauthorized access");
+        }
         return mapToResponse(student);
-    }
-
-    @Override
-    public List<StudentResponseDTO> getAllStudents() {
-        return studentRepository.findAll().stream().map(this::mapToResponse).toList();
     }
 
     @Override
@@ -120,8 +115,29 @@ public class StudentServiceImpl implements StudentService {
         return mapToResponse(studentRepository.save(student));
     }
 
+    @Override
+    public StudentResponseDTO getStudentByUserId(String token, Long userId) {
 
+        AuthUserDto user = authClient.validateSession(token);
 
+        if (!user.getIsActive())
+            throw new RuntimeException("Inactive user");
+
+        if (!user.getUserId().equals(userId) && !user.getRole().equals("ADMIN"))
+            throw new RuntimeException("Unauthorized access");
+
+        Student student = studentRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        return mapToResponse(student);
+    }
+
+    @Override
+    public List<StudentResponseDTO> getAllStudents() {
+        return studentRepository.findAll().stream().map(this::mapToResponse).toList();
+    }
+
+    // ✅ PUT
     @Override
     public StudentResponseDTO updateStudent(String token, Long id, StudentRequestDTO dto) {
 
@@ -130,25 +146,18 @@ public class StudentServiceImpl implements StudentService {
         if (!user.getIsActive()) {
             throw new RuntimeException("Inactive user");
         }
-
-        if (!"PLACEMENT_OFFICER".equalsIgnoreCase(user.getRole())
-                && !"ADMIN".equalsIgnoreCase(user.getRole())) {
-            throw new RuntimeException("Unauthorized access");
-        }
-
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
-        // Admin can update ONLY academic details
-        if (dto.getDept() != null) {
-            student.setDept(dto.getDept());
+        if (!student.getUserId().equals(user.getUserId())
+                && !user.getRole().equalsIgnoreCase("ADMIN") && !"PLACEMENT_OFFICER".equalsIgnoreCase(user.getRole())) {
+            throw new RuntimeException("Unauthorized access");
         }
-        if (dto.getCgpa() != null) {
-            student.setCgpa(dto.getCgpa());
-        }
+
+        student.setDept(dto.getDept());
+        student.setCgpa(dto.getCgpa());
 
         return mapToResponse(studentRepository.save(student));
-
     }
 
 
@@ -162,7 +171,7 @@ public class StudentServiceImpl implements StudentService {
 //        studentRepository.deleteById(id);
 //    }
     @Override
-    public void deleteStudent(String token, Long Id) {
+    public void deleteStudent(String token, Long studentId) {
 
         AuthUserDto user = authClient.validateSession(token);
 
@@ -170,12 +179,12 @@ public class StudentServiceImpl implements StudentService {
             throw new RuntimeException("Inactive user");
         }
 
-        Student student = studentRepository.findById(Id)
+        Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
         // Ownership / role check
         if (!student.getUserId().equals(user.getUserId())
-                && !user.getRole().equalsIgnoreCase("ADMIN") && !user.getRole().equalsIgnoreCase("PLACEMENT_OFFICER")) {
+                && !user.getRole().equals("ADMIN")) {
             throw new RuntimeException("Unauthorized access");
         }
 
@@ -232,7 +241,7 @@ public class StudentServiceImpl implements StudentService {
         AuthUserDto user = authClient.validateSession(token);
 
         Student student = studentRepository.findByUserId(user.getUserId())
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+                    .orElseThrow(() -> new RuntimeException("Student not found"));
 
         authorize(user, student);
 
@@ -248,6 +257,46 @@ public class StudentServiceImpl implements StudentService {
 
         } catch (Exception e) {
             throw new RuntimeException("Upload failed");
+        }
+    }
+
+
+    @Override
+    public ResponseEntity<Resource> downloadingResume(String token, Long studentId) {
+
+        AuthUserDto user = authClient.validateSession(token);
+
+        if (!user.getRole().equals("COMPANY_HR")
+                && !user.getRole().equals("PLACEMENT_OFFICER")) {
+            throw new RuntimeException("Unauthorized access");
+        }
+
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        if (student.getResumePath() == null) {
+            throw new RuntimeException("Resume not uploaded");
+        }
+
+        File file = new File(student.getResumePath());
+
+        if (!file.exists()) {
+            throw new RuntimeException("Resume file not found");
+        }
+
+        try {
+            Resource resource = new UrlResource(file.toURI());
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .header(
+                            HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + file.getName() + "\""
+                    )
+                    .body(resource);
+
+        } catch (MalformedURLException e) {
+            throw new RuntimeException("Invalid resume file path", e);
         }
     }
 
@@ -275,19 +324,11 @@ public class StudentServiceImpl implements StudentService {
     }
 
     private void authorize(AuthUserDto user, Student student) {
-
-        boolean isOwner = student.getUserId().equals(user.getUserId());
-
-        boolean isAdmin = "ADMIN".equalsIgnoreCase(user.getRole());
-
-        boolean isPlacementOfficer =
-                "PLACEMENT_OFFICER".equalsIgnoreCase(user.getRole());
-
-        if (!isOwner && !isAdmin && !isPlacementOfficer) {
+        if (!student.getUserId().equals(user.getUserId())
+                && !user.getRole().equals("ADMIN")) {
             throw new RuntimeException("Unauthorized access");
         }
     }
-
 
     // -------- MAPPER --------
 
