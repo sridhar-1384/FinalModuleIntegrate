@@ -9,20 +9,17 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/reports")
+@CrossOrigin
 public class DepartmentReportController {
 
     private final DepartmentReportService departmentReportService;
 
-    public DepartmentReportController(
-            DepartmentReportService departmentReportService) {
+    public DepartmentReportController(DepartmentReportService departmentReportService) {
         this.departmentReportService = departmentReportService;
     }
 
-    // Department-wise placement report
     @GetMapping("/department-wise")
     public ResponseEntity<List<DepartmentReportDto>> getDepartmentWiseReport() {
-        List<DepartmentReportDto> report =
-                departmentReportService.getDepartmentReport();
-        return ResponseEntity.ok(report);
+        return ResponseEntity.ok(departmentReportService.getDepartmentReport());
     }
 }
