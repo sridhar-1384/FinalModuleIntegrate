@@ -11,11 +11,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.sound.midi.SysexMessage;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Transactional
 @Service
@@ -161,7 +164,8 @@ public class ApplicationService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only PO access.");
         }
         List<ApplicationResponse> responses = new ArrayList<>();
-        for (Application app : applicationRepository.findAll()) responses.add(buildApplicationResponse(app, token));
+        for (Application app : applicationRepository.findAll())
+            responses.add(buildApplicationResponse(app, token));
         return responses;
     }
 
@@ -189,23 +193,36 @@ public class ApplicationService {
         response.setJobId(application.getJobId());
         response.setAppliedDate(application.getAppliedDate());
         response.setStatus(application.getStatus());
+        System.out.println(application);
+        System.out.println(token);
 
         try {
             Map<String, Object> student = webClientBuilder.build().get()
                     .uri(STUDENT_SERVICE_URL + "/api/students/" + application.getStudentId())
                     .header("SESSION-TOKEN", token)
                     .retrieve().bodyToMono(Map.class).block();
+            System.out.println(student);
             if (student != null) {
                 response.setStudentName((String) student.get("name"));
                 response.setStudentDepartment((String) student.get("dept"));
                 if (student.get("cgpa") != null) response.setStudentCgpa(((Number) student.get("cgpa")).doubleValue());
                 Object skillsObj = student.get("skills");
-                if (skillsObj instanceof List) response.setStudentSkills(String.join(",", (List<String>) skillsObj));
+//                if (skillsObj instanceof List)
+//                response.setStudentSkills(String.join(",", (List<String>) skillsObj));
+                if (skillsObj instanceof List) {
+                    List<Map<String, Object>> skillsList = (List<Map<String, Object>>) skillsObj;
+                    String joinedSkills = skillsList.stream()
+                            .map(s -> (String) s.get("skillName"))
+                            .collect(Collectors.joining(", "));
+                    response.setStudentSkills(joinedSkills);
+                }
                 if (student.get("resumePath") != null) {
                     response.setResumeUrl(STUDENT_SERVICE_URL + "/api/students/" + application.getStudentId() + "/resume");
                 }
             }
-        } catch (Exception e) { response.setStudentName("N/A"); }
+        } catch (Exception e) {
+            response.setStudentName("N/A");
+        }
 
         try {
             Map<String, Object> job = webClientBuilder.build().get()
