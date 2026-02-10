@@ -33,4 +33,6 @@ public interface StudentService {
     void removeSkill(String token, Long masterSkillId);
 
     StudentResponseDTO getStudentByIdForHrandPo(Long studentId,String token);
+
+    ResponseEntity<Resource> downloadingResume(String token, Long studentId);
 }

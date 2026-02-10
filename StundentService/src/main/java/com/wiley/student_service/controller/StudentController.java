@@ -69,4 +69,9 @@ public class StudentController {
     public ResponseEntity<Resource> downloadResume( @RequestHeader("Session-Token") String token) {
         return studentService.downloadResume(token);
     }
+
+    @GetMapping("/{studentId}/resume")
+    public ResponseEntity<Resource> downloadingResume( @RequestHeader("Session-Token") String token,@PathVariable("studentId") Long studentId) {
+        return studentService.downloadingResume(token,studentId);
+    }
 }

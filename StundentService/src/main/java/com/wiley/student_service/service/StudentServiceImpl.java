@@ -13,6 +13,7 @@ import com.wiley.student_service.repository.StudentSkillRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.net.MalformedURLException;
 import java.util.List;
 
 @Service
@@ -76,7 +78,7 @@ public class StudentServiceImpl implements StudentService {
         if(!user.getIsActive()) {
             throw new RuntimeException("Inactive user");
         }
-        if (!user.getRole().equals("COMPANY_HR") && !user.getRole().equals("PLACEMENT_OFFICER")) {
+        if (!user.getRole().equals("COMPANY_HR") && !user.getRole().equals("PLACEMENT_OFFICER" )) {
             throw new RuntimeException("Unauthorized access");
         }
         return mapToResponse(student);
@@ -235,6 +237,9 @@ public class StudentServiceImpl implements StudentService {
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
         authorize(user, student);
+        if (!user.getRole().equals("COMPANY_HR") && !user.getRole().equals("PLACEMENT_OFFICER")) {
+            throw new RuntimeException("Unauthorized access");
+        }
 
         try {
             File file = new File(student.getResumePath());
@@ -256,6 +261,72 @@ public class StudentServiceImpl implements StudentService {
             throw new RuntimeException("Unauthorized access");
         }
     }
+
+//    @Override
+//    public ResponseEntity<Resource> downloadingResume(String token,Long studentId) {
+//
+//        AuthUserDto user = authClient.validateSession(token);
+//        Student student = studentRepository.findById(studentId)
+//                .orElseThrow(() -> new RuntimeException("Student not found"));
+//
+//        if (!user.getRole().equals("COMPANY_HR") && !user.getRole().equals("PLACEMENT_OFFICER")) {
+//            throw new RuntimeException("Unauthorized access");
+//        }
+//
+//        try {
+//            File file = new File(student.getResumePath());
+//            Resource resource = new UrlResource(file.toURI());
+//
+//            return ResponseEntity.ok()
+//                    .contentType(MediaType.APPLICATION_PDF)
+//                    .header("Content-Disposition", "attachment; filename=" + file.getName())
+//                    .body(resource);
+//
+//        } catch (Exception e) {
+//            throw new RuntimeException("Download failed");
+//        }
+//    }
+
+
+    @Override
+    public ResponseEntity<Resource> downloadingResume(String token, Long studentId) {
+
+        AuthUserDto user = authClient.validateSession(token);
+
+        if (!user.getRole().equals("COMPANY_HR")
+                && !user.getRole().equals("PLACEMENT_OFFICER")) {
+            throw new RuntimeException("Unauthorized access");
+        }
+
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        if (student.getResumePath() == null) {
+            throw new RuntimeException("Resume not uploaded");
+        }
+
+        File file = new File(student.getResumePath());
+
+        if (!file.exists()) {
+            throw new RuntimeException("Resume file not found");
+        }
+
+        try {
+            Resource resource = new UrlResource(file.toURI());
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .header(
+                            HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + file.getName() + "\""
+                    )
+                    .body(resource);
+
+        } catch (MalformedURLException e) {
+            throw new RuntimeException("Invalid resume file path", e);
+        }
+    }
+
 
     // -------- MAPPER --------
 
