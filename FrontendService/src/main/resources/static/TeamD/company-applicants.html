@@ -46,9 +46,8 @@
     <div class="row">
         <div class="col-md-2 sidebar p-3">
             <h6 class="text-uppercase text-secondary mb-3">Company Menu</h6>
-            <a href="../TeamB/student.html"><i class="bi bi-grid me-2"></i>Dashboard</a>
+            <a href="../TeamC/company-dashboard.html"><i class="bi bi-grid me-2"></i>Dashboard</a>
             <a href="../TeamC/company-jobs.html"><i class="bi bi-briefcase me-2"></i>My Jobs</a>
-<!--            <a href="#" class="active"><i class="bi bi-people me-2"></i>Applications</a>-->
         </div>
         <div class="col-md-10 p-4">
             <h4 class="fw-semibold mb-4">
@@ -105,6 +104,53 @@
 
     document.addEventListener("DOMContentLoaded", fetchApplications);
 
+    // Secure Download Function ---
+    async function downloadSecureResume(url, studentName) {
+    try {
+        const res = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Session-Token': token // Uses the token from sessionStorage
+            }
+        });
+
+        if (!res.ok) throw new Error("Could not download resume. Status: " + res.status);
+
+        const blob = await res.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+
+        // Generate a highly unique timestamp: YYYYMMDD_HHMMSS_mmm
+        const now = new Date();
+        const timestamp = now.getFullYear().toString() +
+            (now.getMonth() + 1).toString().padStart(2, '0') +
+            now.getDate().toString().padStart(2, '0') + "_" +
+            now.getHours().toString().padStart(2, '0') +
+            now.getMinutes().toString().padStart(2, '0') +
+            now.getSeconds().toString().padStart(2, '0') + "_" +
+            now.getMilliseconds().toString().padStart(3, '0');
+
+        // Clean the student name for the filename
+        const safeName = studentName.replace(/\s+/g, '_');
+
+        a.style.display = 'none';
+        a.href = downloadUrl;
+
+        // Final Unique Filename
+        a.download = `Resume_${safeName}_${timestamp}.pdf`;
+
+        document.body.appendChild(a);
+        a.click();
+
+        // Cleanup
+        window.URL.revokeObjectURL(downloadUrl);
+        document.body.removeChild(a);
+    } catch (err) {
+        console.error("Download error:", err);
+        alert("Error downloading resume: " + err.message);
+    }
+}
+
     async function fetchApplications() {
         const tbody = document.getElementById("applicants-table-body");
 
@@ -152,14 +198,19 @@
                 const skills = app.studentSkills
                     ? `<small class="text-muted">${app.studentSkills}</small>`
                     : "-";
+
+                // --- CHANGED: Using button with downloadSecureResume instead of direct <a> tag ---
+                const studentDisplayName = app.studentName || "Student_" + app.studentId;
                 const resumeLink = app.resumeUrl
-                    ? `<a href="${app.resumeUrl}" target="_blank" class="btn btn-sm btn-light border"><i class="bi bi-file-earmark-pdf text-danger me-1"></i>PDF</a>`
+                    ? `<button onclick="downloadSecureResume('${app.resumeUrl}', '${studentDisplayName}')" class="btn btn-sm btn-light border">
+                        <i class="bi bi-file-earmark-pdf text-danger me-1"></i>PDF
+                       </button>`
                     : '<span class="text-muted small">No Resume</span>';
 
                 const row = `
                             <tr>
                                 <td class="p-3">${app.id}</td>
-                                <td class="p-3 fw-bold">${app.studentName || "Student ID: " + app.studentId}</td>
+                                <td class="p-3 fw-bold">${studentDisplayName}</td>
                                 <td class="p-3">${app.studentDepartment || "-"}</td>
                                 <td class="p-3">${app.studentCgpa || "-"}</td>
                                 <td class="p-3">${skills}</td>
@@ -176,8 +227,6 @@
             tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger p-4">Connection failed.</td></tr>`;
         }
     }
-
-
 </script>
 </body>
 </html>
