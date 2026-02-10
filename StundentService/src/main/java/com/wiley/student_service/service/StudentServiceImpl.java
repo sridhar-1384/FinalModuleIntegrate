@@ -60,7 +60,23 @@ public class StudentServiceImpl implements StudentService {
             throw new RuntimeException("Inactive user");
         }
         if (!student.getUserId().equals(user.getUserId())
-                && !user.getRole().equals("ADMIN")) {
+                && !user.getRole().equals("PLACEMENT_OFFICER")) {
+            throw new RuntimeException("Unauthorized access");
+        }
+        return mapToResponse(student);
+    }
+
+    @Override
+    public StudentResponseDTO getStudentByIdForHrandPo(Long studentId,String token) {
+        AuthUserDto user = authClient.validateSession(token);
+
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        if(!user.getIsActive()) {
+            throw new RuntimeException("Inactive user");
+        }
+        if (!user.getRole().equals("COMPANY_HR") && !user.getRole().equals("PLACEMENT_OFFICER")) {
             throw new RuntimeException("Unauthorized access");
         }
         return mapToResponse(student);
