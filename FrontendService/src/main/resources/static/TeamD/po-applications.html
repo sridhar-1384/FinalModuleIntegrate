@@ -44,12 +44,47 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-2 sidebar p-3">
-            <h6 class="text-uppercase text-secondary mb-3">PO Menu</h6>
-            <a href="#"><i class="bi bi-grid me-2"></i>Dashboard</a>
-            <a href="#"><i class="bi bi-people me-2"></i>Students</a>
-            <a href="#"><i class="bi bi-building me-2"></i>Companies</a>
-            <a href="#" class="active"><i class="bi bi-file-earmark-text me-2"></i>Applications</a>
+            <h6 class="text-uppercase text-secondary mb-3">Menu</h6>
+
+            <a class="active" href="#">
+                <i class="bi bi-grid me-2"></i>Dashboard
+            </a>
+
+            <a href="placement-report.html">
+                <i class="bi bi-clipboard-data me-2"></i>Placement Report
+            </a>
+
+            <a href="department-report.html">
+                <i class="bi bi-diagram-3 me-2"></i>Department Report
+            </a>
+
+            <a href="student-stats.html">
+                <i class="bi bi-bar-chart me-2"></i>Student Statistics
+            </a>
+
+            <a href="company-report.html">
+                <i class="bi bi-building me-2"></i>Company Report
+            </a>
+
+            <a href="student-list.html">
+                <i class="bi bi-people me-2"></i>Students
+            </a>
+
+
+            <a href="/TeamC/po-jobs-list.html">
+                <i class="bi bi-briefcase me-2"></i>All Jobs
+            </a>
+
+            <a href="/TeamD/po-applications.html">
+                <i class="bi bi-file-earmark-text me-2"></i>Applications
+            </a>
+            <!--            <a href="/TeamB/po-student-details.html">-->
+            <!--                <i class="bi bi-person-badge me-2"></i>Student Details-->
+            <!--            </a>-->
+
+
         </div>
+
         <div class="col-md-10 p-4">
             <h4 class="fw-semibold mb-4">All Applications</h4>
 
@@ -83,11 +118,11 @@
     sec.addEventListener("click",()=>{
         console.log("clicked")
         if(token) sessionStorage.clear()
-        window.location.href="/login.html"
+        window.location.href="../TeamA/login.html"
     })
 
     const API_BASE = "http://localhost:8084/api/applications";
-    const login_page = "login.html";
+    const login_page = "../TeamA/login.html";
 
     document.addEventListener("DOMContentLoaded", fetchApplications);
     async function fetchApplications() {
