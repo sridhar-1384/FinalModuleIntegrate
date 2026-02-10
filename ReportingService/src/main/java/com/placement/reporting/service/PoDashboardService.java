@@ -1,41 +1,32 @@
 package com.placement.reporting.service;
 
+import com.placement.reporting.client.ApplicationClient;
+import com.placement.reporting.client.CompanyClient;
+import com.placement.reporting.client.StudentClient;
 import com.placement.reporting.dto.PoDashboardDto;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-
-import java.util.List;
-import java.util.Map;
 
 @Service
-@SuppressWarnings("unchecked")
 public class PoDashboardService {
 
-    private final WebClient webClient;
+    private final StudentClient studentClient;
+    private final CompanyClient companyClient;
+    private final ApplicationClient applicationClient;
 
-    public PoDashboardService(WebClient webClient) {
-        this.webClient = webClient;
+    public PoDashboardService(
+            StudentClient studentClient,
+            CompanyClient companyClient,
+            ApplicationClient applicationClient) {
+
+        this.studentClient = studentClient;
+        this.companyClient = companyClient;
+        this.applicationClient = applicationClient;
     }
 
-    public PoDashboardDto getDashboardData() {
+    public PoDashboardDto getDashboardData(String token) {
 
-        // 🔹 Total students (Team 2)
-        List<Map<String, Object>> students = webClient.get()
-                .uri("http://localhost:8082/api/students/list")
-                .retrieve()
-                .bodyToMono(List.class)
-                .block();
-
-        long totalStudents = students.size();
-
-        // 🔹 All jobs (Team 3)
-        List<Map<String, Object>> jobs = webClient.get()
-                .uri("http://localhost:8083/api/jobs/list")
-                .retrieve()
-                .bodyToMono(List.class)
-                .block();
-
-        long totalJobs = jobs.size();
+        long totalStudents = studentClient.getAllStudents().size();
+        long totalJobs = companyClient.getAllJobs().size();
 
         long totalApplications = 0;
         long placedStudents = 0;
@@ -43,26 +34,17 @@ public class PoDashboardService {
         double totalPackage = 0.0;
         long selectedCount = 0;
 
-        // 🔹 For each job → fetch applications
-        for (Map<String, Object> job : jobs) {
+        var jobs = companyClient.getAllJobs();
 
-            Long jobId = Long.valueOf(job.get("id").toString());
-            double pkg = Double.parseDouble(job.get("package").toString());
+        for (var job : jobs) {
 
-            List<Map<String, Object>> applications = webClient.get()
-                    .uri("http://localhost:8084/api/applications/job/{id}", jobId)
-                    .retrieve()
-                    .bodyToMono(List.class)
-                    .block();
-
+            var applications = applicationClient.getApplicationsByJob(job.getId(),token);
             totalApplications += applications.size();
 
-            for (Map<String, Object> app : applications) {
-                if ("SELECTED".equalsIgnoreCase(
-                        String.valueOf(app.get("status"))
-                )) {
+            for (var app : applications) {
+                if ("SELECTED".equalsIgnoreCase(app.getStatus())) {
                     placedStudents++;
-                    totalPackage += pkg;
+                    totalPackage += job.getPackageLpa();
                     selectedCount++;
                 }
             }
@@ -79,5 +61,6 @@ public class PoDashboardService {
                 placedStudents,
                 avgPackage
         );
+
     }
 }
