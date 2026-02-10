@@ -66,6 +66,10 @@
                 <i class="bi bi-people me-2"></i>Students
             </a>
 
+            <a href="/TeamB/masterskill.html">
+                🛠️ Master Skills
+            </a>
+
 
             <a href="/TeamC/po-jobs-list.html">
                 <i class="bi bi-briefcase me-2"></i>All Jobs
@@ -74,9 +78,9 @@
             <a href="/TeamD/po-applications.html">
                 <i class="bi bi-file-earmark-text me-2"></i>Applications
             </a>
-<!--            <a href="/TeamB/po-student-details.html">-->
-<!--                <i class="bi bi-person-badge me-2"></i>Student Details-->
-<!--            </a>-->
+            <!--            <a href="/TeamB/po-student-details.html">-->
+            <!--                <i class="bi bi-person-badge me-2"></i>Student Details-->
+            <!--            </a>-->
 
         </div>
 
@@ -167,7 +171,7 @@
             // 1. Load student basic info
             const studentRes = await fetch(`http://localhost:8082/api/students/${studentId}`, {
                 headers: {
-                    "SESSION-TOKEN": token
+                    "X-SESSION-TOKEN": token
                 }
             });
 
@@ -177,12 +181,12 @@
 
             document.getElementById("studentId").innerText = student.id ?? "-";
             document.getElementById("studentName").innerText = student.name ?? "Student";
-            document.getElementById("studentDept").innerText = student.dept ?? "-";
+            document.getElementById("studentDept").innerText = student.department ?? "-";
 
             // 2. Load report data
             const reportRes = await fetch(`http://localhost:8085/api/reports/student/${studentId}`, {
                 headers: {
-                    "SESSION-TOKEN": token
+                    "X-SESSION-TOKEN": token
                 }
             });
 

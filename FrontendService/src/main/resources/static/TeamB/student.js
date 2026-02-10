@@ -235,6 +235,66 @@ async function addSkill() {
     }
 }
 
+function toggleEditProfile() {
+    const section = document.getElementById("editProfileSection");
+
+    if (section.style.display === "none") {
+        // Prefill existing values
+        document.getElementById("editName").value =
+            document.getElementById("name").innerText;
+
+        document.getElementById("editDept").value =
+            document.getElementById("dept").innerText;
+
+        document.getElementById("editCgpa").value =
+            document.getElementById("cgpa").innerText;
+
+        section.style.display = "block";
+    } else {
+        section.style.display = "none";
+    }
+}
+
+function updateProfile() {
+  const sessionToken = getSessionToken();
+    if (!sessionToken) return;
+
+    const payload = {
+        name: document.getElementById("editName").value,
+        dept: document.getElementById("editDept").value,
+        cgpa: document.getElementById("editCgpa").value
+    };
+
+    fetch("http://localhost:8082/api/students/me", {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            'Session-Token': sessionToken
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(res => {
+        if (!res.ok) throw new Error("Update failed");
+        return res.json();
+    })
+    .then(data => {
+        // Update UI values
+        document.getElementById("name").innerText = data.name;
+        document.getElementById("dept").innerText = data.dept;
+        document.getElementById("cgpa").innerText = data.cgpa;
+
+        // Hide edit section
+        document.getElementById("editProfileSection").style.display = "none";
+
+        alert("Profile updated successfully!");
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Failed to update profile");
+    });
+}
+
+
 // -------- REMOVE SKILL --------
 async function removeSkill(masterSkillId) {
     const sessionToken = getSessionToken();
@@ -390,7 +450,7 @@ function logout() {
 // -------- NAVIGATION --------
 function goPage(page) {
     if (page === 'student-applications.html' && currentStudentId) {
-            window.location.href = `${page}?studentid=${currentStudentId}`;
+            window.location.href = `${page}?studentId=${currentStudentId}`;
         } else {
             window.location.href = page;
         }
@@ -400,4 +460,3 @@ function goPage(page) {
 document.addEventListener('DOMContentLoaded', () => {
     loadStudentProfile();
 });
-

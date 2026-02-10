@@ -56,6 +56,10 @@
                 <i class="bi bi-people me-2"></i>Students
             </a>
 
+            <a href="/TeamB/masterskill.html">
+                🛠️ Master Skills
+            </a>
+
             <a href="/TeamC/po-jobs-list.html">
                 <i class="bi bi-briefcase me-2"></i>All Jobs
             </a>
@@ -63,9 +67,9 @@
             <a href="/TeamD/po-applications.html">
                 <i class="bi bi-file-earmark-text me-2"></i>Applications
             </a>
-<!--            <a href="/TeamB/po-student-details.html">-->
-<!--                <i class="bi bi-person-badge me-2"></i>Student Details-->
-<!--            </a>-->
+            <!--            <a href="/TeamB/po-student-details.html">-->
+            <!--                <i class="bi bi-person-badge me-2"></i>Student Details-->
+            <!--            </a>-->
 
         </div>
 
@@ -129,9 +133,9 @@
 
         try {
             // 1. Fetch students
-            const studentsRes = await fetch("http://localhost:8082/api/admin/students", {
+            const studentsRes = await fetch("http://localhost:8082/api/students/list", {
                 headers: {
-                    "SESSION-TOKEN": token
+                    "X-SESSION-TOKEN": token
                 }
             });
 
@@ -146,7 +150,7 @@
                 // 2. Fetch report stats for each student
                 const statsRes = await fetch(`http://localhost:8085/api/reports/student/${id}`, {
                     headers: {
-                        "SESSION-TOKEN": token
+                        "X-SESSION-TOKEN": token
                     }
                 });
 

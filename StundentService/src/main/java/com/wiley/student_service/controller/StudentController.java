@@ -26,19 +26,21 @@ public class StudentController {
         return new ResponseEntity<>(studentService.createStudent(dto), HttpStatus.CREATED);
     }
 
-    @GetMapping("/me")
+    @GetMapping("/{id}")
     public ResponseEntity<StudentResponseDTO> getStudent(@RequestHeader ("Session-Token")String token) {
         return ResponseEntity.ok(studentService.getStudentById(token));
-    }
-
-    @GetMapping("/{studentId}")
-    public ResponseEntity<StudentResponseDTO> getStudentByIdForHrandPo(@PathVariable("studentId") Long studentId, @RequestHeader ("Session-Token")String token) {
-        return ResponseEntity.ok(studentService.getStudentByIdForHrandPo(studentId,token));
     }
 
     @GetMapping("/userId/{user_id}")
     public ResponseEntity<StudentResponseDTO> getStudentByUserId(@RequestHeader("Session-Token") String token,@PathVariable("user_id") Long userId) {
         return ResponseEntity.ok(studentService.getStudentByUserId(token, userId));
+    }
+    @PutMapping("/me")
+    public ResponseEntity<StudentResponseDTO> updateMyProfile(
+            @RequestHeader("Session-Token") String token,
+            @RequestBody StudentRequestDTO dto
+    ) {
+        return ResponseEntity.ok(studentService.updateMyProfile(token, dto));
     }
 
 

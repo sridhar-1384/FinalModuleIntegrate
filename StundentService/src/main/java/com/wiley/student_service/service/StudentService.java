@@ -16,7 +16,8 @@ public interface StudentService {
 
     StudentResponseDTO getStudentByUserId(String token,Long userId);
 
-//    StudentResponseDTO getStudentByUserId(String token, String userId);
+    //    StudentResponseDTO getStudentByUserId(String token, String userId);
+    StudentResponseDTO updateMyProfile(String token, StudentRequestDTO dto);
 
     List<StudentResponseDTO> getAllStudents();
 
@@ -31,6 +32,4 @@ public interface StudentService {
     ResponseEntity<Resource> downloadResume(String token);
 
     void removeSkill(String token, Long masterSkillId);
-
-    StudentResponseDTO getStudentByIdForHrandPo(Long studentId,String token);
 }

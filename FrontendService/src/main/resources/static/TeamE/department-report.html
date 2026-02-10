@@ -59,6 +59,10 @@
                 <i class="bi bi-people me-2"></i>Students
             </a>
 
+            <a href="/TeamB/masterskill.html">
+                🛠️ Master Skills
+            </a>
+
             <a href="/TeamC/po-jobs-list.html">
                 <i class="bi bi-briefcase me-2"></i>All Jobs
             </a>
@@ -113,7 +117,7 @@
 
         fetch("http://localhost:8085/api/reports/department-wise", {
             headers: {
-                "SESSION-TOKEN": token
+                "X-SESSION-TOKEN": token
             }
         })
             .then(res => {

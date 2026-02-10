@@ -1,4 +1,3 @@
-
 /* ---------- GLOBAL ---------- */
 body {
     margin: 0;
@@ -145,7 +144,9 @@ body {
 .card-header-custom {
     border-bottom: 2px solid #f7fafc;
     padding-bottom: 12px;
+    position:relative;
 }
+
 
 .card-header-custom h5 {
     font-weight: 700;
@@ -155,7 +156,19 @@ body {
     align-items: center;
     font-size: 1.1rem;
 }
+.edit-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #6c63ff;
+    font-size: 15px;
+}
 
+.edit-icon:hover {
+    color: #5548c8;
+}
 /* ---------- PROFILE CARD ---------- */
 .profile-card .info-item {
     background-color: #f8f9fa;
@@ -210,6 +223,8 @@ body {
 .upload-icon {
     opacity: 0.6;
 }
+
+
 
 /* ---------- SKILLS ---------- */
 .skills-container {

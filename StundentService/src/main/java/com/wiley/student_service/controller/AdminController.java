@@ -20,7 +20,7 @@ public class AdminController {
     private final SkillService service;
 
     @DeleteMapping("/delete-student/{id}")
-    public ResponseEntity<Void> delete(@RequestHeader("Session-Token") String token,@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@RequestHeader("Session-Token") String token,@PathVariable("id") Long id) {
         studentService.deleteStudent(token,id);
         return ResponseEntity.noContent().build();
     }
@@ -31,7 +31,7 @@ public class AdminController {
     }
 
     @PutMapping("/update-student/{id}")
-    public ResponseEntity<StudentResponseDTO> updateStudent(@RequestHeader("Session-Token") String token,@PathVariable Long id,
+    public ResponseEntity<StudentResponseDTO> updateStudent(@RequestHeader("Session-Token") String token,@PathVariable("id") Long id,
                                                             @RequestBody StudentRequestDTO dto) {
         return ResponseEntity.ok(studentService.updateStudent(token,id, dto));
     }
