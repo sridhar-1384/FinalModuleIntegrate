@@ -12,7 +12,6 @@ public class AuthFilter extends OncePerRequestFilter {
 
     private final AuthValidationService authValidationService;
 
-    // Proper constructor injection
     public AuthFilter(AuthValidationService authValidationService) {
         this.authValidationService = authValidationService;
     }
@@ -24,15 +23,29 @@ public class AuthFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String path = request.getRequestURI();
+        // Allow CORS preflight requests
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            response.setStatus(HttpServletResponse.SC_OK);
+            return;
+        }
 
-        // Only protect report APIs
-        if (path.startsWith("/api/reports")) {
+        String requestPath = request.getRequestURI();
+
+        // Protect only reporting APIs
+        if (requestPath.startsWith("/api/reports")) {
+
             String token = request.getHeader("X-SESSION-TOKEN");
+
+            if (token == null || token.trim().isEmpty()) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"error\":\"Missing session token\"}");
+                return;
+            }
 
             try {
                 authValidationService.validatePlacementOfficer(token);
-            } catch (Exception e) {
+            } catch (Exception ex) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
                 response.getWriter().write("{\"error\":\"Unauthorized\"}");

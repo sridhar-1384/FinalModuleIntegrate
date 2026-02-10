@@ -1,32 +1,33 @@
 package com.placement.reporting.service;
 
-import com.placement.reporting.client.ApplicationClient;
-import com.placement.reporting.client.StudentClient;
 import com.placement.reporting.dto.DepartmentReportDto;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.*;
 
 @Service
 public class DepartmentReportService {
 
-    private final StudentClient studentClient;
-    private final ApplicationClient applicationClient;
+    private final WebClient webClient;
 
-    public DepartmentReportService(StudentClient studentClient,
-                                   ApplicationClient applicationClient) {
-        this.studentClient = studentClient;
-        this.applicationClient = applicationClient;
+    public DepartmentReportService(WebClient webClient) {
+        this.webClient = webClient;
     }
 
     public List<DepartmentReportDto> getDepartmentReport() {
 
-        var students = studentClient.getAllStudents();
+        // 🔹 Fetch all students (Team 2)
+        List<Map<String, Object>> students = webClient.get()
+                .uri("http://localhost:8082/api/students/list")
+                .retrieve()
+                .bodyToMono(List.class)
+                .block();
 
         Map<String, Long> totalByDept = new HashMap<>();
         Map<String, Long> placedByDept = new HashMap<>();
 
-        for (var student : students) {
+        for (Map<String, Object> student : students) {
 
             String department = String.valueOf(student.get("department"));
             Long studentId = Long.valueOf(student.get("id").toString());
@@ -36,10 +37,19 @@ public class DepartmentReportService {
                     totalByDept.getOrDefault(department, 0L) + 1
             );
 
-            var applications = applicationClient.getApplicationsByStudent(studentId);
+            // 🔹 Fetch applications by student (Team 4)
+            List<Map<String, Object>> applications = webClient.get()
+                    .uri("http://localhost:8084/api/applications/student/{id}", studentId)
+                    .retrieve()
+                    .bodyToMono(List.class)
+                    .block();
 
             boolean isPlaced = applications.stream()
-                    .anyMatch(app -> "SELECTED".equalsIgnoreCase(app.getStatus()));
+                    .anyMatch(app ->
+                            "SELECTED".equalsIgnoreCase(
+                                    String.valueOf(((Map<?, ?>) app).get("status"))
+                            )
+                    );
 
             if (isPlaced) {
                 placedByDept.put(

@@ -11,12 +11,16 @@ public class PlacementReportController {
 
     private final PlacementReportService placementReportService;
 
-    public PlacementReportController(PlacementReportService placementReportService) {
+    public PlacementReportController(
+            PlacementReportService placementReportService) {
         this.placementReportService = placementReportService;
     }
 
+    // Overall placement statistics
     @GetMapping("/overview")
     public ResponseEntity<PlacementReportDto> getPlacementReport() {
-        return ResponseEntity.ok(placementReportService.getPlacementReport());
+        PlacementReportDto report =
+                placementReportService.getPlacementReport();
+        return ResponseEntity.ok(report);
     }
 }
