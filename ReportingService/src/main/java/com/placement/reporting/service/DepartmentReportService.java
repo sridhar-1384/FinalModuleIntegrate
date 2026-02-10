@@ -1,55 +1,49 @@
 package com.placement.reporting.service;
 
+import com.placement.reporting.client.ApplicationClient;
+import com.placement.reporting.client.StudentClient;
 import com.placement.reporting.dto.DepartmentReportDto;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.*;
 
 @Service
 public class DepartmentReportService {
 
-    private final WebClient webClient;
+    private final StudentClient studentClient;
+    private final ApplicationClient applicationClient;
 
-    public DepartmentReportService(WebClient webClient) {
-        this.webClient = webClient;
+    public DepartmentReportService(StudentClient studentClient,
+                                   ApplicationClient applicationClient) {
+        this.studentClient = studentClient;
+        this.applicationClient = applicationClient;
     }
 
     public List<DepartmentReportDto> getDepartmentReport() {
 
-        // 🔹 Fetch all students (Team 2)
-        List<Map<String, Object>> students = webClient.get()
-                .uri("http://localhost:8082/api/students/list")
-                .retrieve()
-                .bodyToMono(List.class)
-                .block();
+        var students = studentClient.getAllStudents();
+
 
         Map<String, Long> totalByDept = new HashMap<>();
         Map<String, Long> placedByDept = new HashMap<>();
 
-        for (Map<String, Object> student : students) {
+        for (var student : students) {
+            System.out.println(student);
 
-            String department = String.valueOf(student.get("department"));
+            String department = String.valueOf(student.get("dept"));
+            System.out.println("department :"+department);
             Long studentId = Long.valueOf(student.get("id").toString());
+            System.out.println("id of student:"+studentId);
 
             totalByDept.put(
                     department,
                     totalByDept.getOrDefault(department, 0L) + 1
             );
 
-            // 🔹 Fetch applications by student (Team 4)
-            List<Map<String, Object>> applications = webClient.get()
-                    .uri("http://localhost:8084/api/applications/student/{id}", studentId)
-                    .retrieve()
-                    .bodyToMono(List.class)
-                    .block();
+            var applications = applicationClient.getApplicationsByStudent(studentId);
 
             boolean isPlaced = applications.stream()
-                    .anyMatch(app ->
-                            "SELECTED".equalsIgnoreCase(
-                                    String.valueOf(((Map<?, ?>) app).get("status"))
-                            )
-                    );
+                    .anyMatch(app -> "SELECTED".equalsIgnoreCase(app.getStatus()));
 
             if (isPlaced) {
                 placedByDept.put(
