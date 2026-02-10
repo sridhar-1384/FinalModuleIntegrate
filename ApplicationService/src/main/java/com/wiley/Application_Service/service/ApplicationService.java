@@ -114,16 +114,16 @@ public class ApplicationService {
         Map<String, Object> auth = validateSession(token);
         String role = (String) auth.get("role");
 
-        if (!"COMPANY_HR".equalsIgnoreCase(role) && !"PLACEMENT_OFFICER".equalsIgnoreCase(role)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access Denied.");
-        }
-
-        // Company ID Check
-        if ("COMPANY_HR".equalsIgnoreCase(role)) {
-            long userId = ((Number) auth.get("userId")).longValue();
-            Map<String, Object> companyResponse = getCompanyById(userId, token);
-            verifyJobOwner(jobId, (Number) companyResponse.get("id"));
-        }
+//        if (!"COMPANY_HR".equalsIgnoreCase(role) && !"PLACEMENT_OFFICER".equalsIgnoreCase(role)) {
+//            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access Denied.");
+//        }
+//
+//        // Company ID Check
+//        if ("COMPANY_HR".equalsIgnoreCase(role)) {
+//            long userId = ((Number) auth.get("userId")).longValue();
+//            Map<String, Object> companyResponse = getCompanyById(userId, token);
+//            verifyJobOwner(jobId, (Number) companyResponse.get("id"));
+//        }
 
         List<Application> applications = applicationRepository.findByJobId(jobId);
         List<ApplicationResponse> responses = new ArrayList<>();
